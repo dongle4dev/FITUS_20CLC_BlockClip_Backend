@@ -67,7 +67,8 @@ router.post(
       // } else {
         // let user = await userServiceInstance.createUser(req.body);
         // if (user) {
-          const { signature, message, address } = req.body;
+          const { signature, address } = req.body;
+          const message = "Sign in to BlockClip";
           if (
             auth.isValidSignature({
               message,
