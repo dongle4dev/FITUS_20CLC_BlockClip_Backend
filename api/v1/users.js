@@ -5,6 +5,8 @@ const { check, validationResult } = require("express-validator");
 const auth = require("../utils/auth");
 const config = require("../../config/config");
 const constants = require("../../config/constants");
+const verifyToken = require("../middlewares/verify-token");
+
 
 // const ethers = require("ethers");
 // let rpc = config.MATIC_RPC;

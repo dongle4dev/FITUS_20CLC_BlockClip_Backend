@@ -5,7 +5,7 @@ let config = require("../../config/config");
 let constants = require("../../config/constants");
 
 async function verifyToken(req, res, next) {
-  var token = req.headers["x-access-token"] || req.headers["authorization"];
+  var token = req.headers["x-access-token"] || req.headers.authorization.split(' ')[1];
 
   if (!token) {
     return res.status(401).json({ message: constants.MESSAGES.UNAUTHORIZED });
