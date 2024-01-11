@@ -23,7 +23,7 @@ async function verifyToken(req, res, next) {
             .status(401)
             .json({ message: constants.MESSAGES.UNAUTHORIZED });
         }
-        req.userId = decoded.userId;
+        req.userWallet = decoded.userWallet;
       }
 
       next();

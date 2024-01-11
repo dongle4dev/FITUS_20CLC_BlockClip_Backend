@@ -81,7 +81,7 @@ router.post(
               signature: signature,
             })
           ) {
-            var token = jwt.sign({ userWallet: userExists.wallet }, config.secret, {
+            var token = jwt.sign({ userWallet: wallet }, config.secret, {
               expiresIn: constants.JWT_EXPIRY,
             });
 
@@ -126,6 +126,7 @@ router.post(
 router.get("/details", verifyToken, async (req, res) => {
   try {
     let userWallet = req.userWallet;
+    console.log(userWallet);
     let users = await userServiceInstance.getUser({ userWallet });
     return res
       .status(constants.RESPONSE_STATUS_CODES.OK)
