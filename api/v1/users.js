@@ -6,6 +6,8 @@ const auth = require("../utils/auth");
 const config = require("../../config/config");
 const constants = require("../../config/constants");
 const verifyToken = require("../middlewares/verify-token");
+const userService = require("../services/user");
+let userServiceInstance = new userService();
 
 
 // const ethers = require("ethers");
@@ -27,7 +29,7 @@ const verifyToken = require("../middlewares/verify-token");
 router.post(
   "/login",
   [
-    check("address", "A valid address is required")
+    check("wallet", "A valid address is required")
       .exists()
       .isEthereumAddress(),
     check("signature", "A valid signature is required")
@@ -43,58 +45,61 @@ router.post(
           .json({ error: errors.array() });
       }
 
-      // let userExists = await userServiceInstance.userExists(req.body);
-      // if (userExists) {
-      //   if (
-      //     auth.isValidSignature({
-      //       owner: userExists.address,
-      //       signature: req.body.signature,
-      //     })
-      //   ) {
-      //     var token = jwt.sign({ userId: userExists.id }, config.secret, {
-      //       expiresIn: constants.JWT_EXPIRY,
-      //     });
-      //     return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
-      //       message: constants.RESPONSE_STATUS.SUCCESS,
-      //       data: userExists,
-      //       auth_token: token,
-      //     });
-      //   } else {
-      //     return res
-      //       .status(401)
-      //       .json({ message: constants.MESSAGES.UNAUTHORIZED });
-      //   }
-      // } else {
-        // let user = await userServiceInstance.createUser(req.body);
-        // if (user) {
-          const { signature, address } = req.body;
+      let userExists = await userServiceInstance.userExists(req.body);
+      if (userExists.length !== 0) {
+        userExists = userExists[0];
+        const message = "Sign in to BlockClip";
+        if (
+          auth.isValidSignature({
+            message,
+            owner: userExists.wallet,
+            signature: req.body.signature,
+          })
+        ) {
+          var token = jwt.sign({ userId: userExists.id }, config.secret, {
+            expiresIn: constants.JWT_EXPIRY,
+          });
+          return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
+            message: constants.RESPONSE_STATUS.SUCCESS,
+            data: userExists,
+            auth_token: token,
+          });
+        } else {
+          return res
+            .status(401)
+            .json({ message: constants.MESSAGES.UNAUTHORIZED });
+        }
+      } else {
+        let user = await userServiceInstance.createUser(req.body);
+        if (user) {
+          const { signature, wallet } = req.body;
           const message = "Sign in to BlockClip";
           if (
             auth.isValidSignature({
               message,
-              owner: address,
+              owner: wallet,
               signature: signature,
             })
           ) {
-            // var token = jwt.sign({ userId: user.id }, config.secret, {
-            //   expiresIn: constants.JWT_EXPIRY,
-            // });
-            var token = jwt.sign({ address }, config.secret, {
+            var token = jwt.sign({ userId: user.id }, config.secret, {
               expiresIn: constants.JWT_EXPIRY,
             });
+            // var token = jwt.sign({ wallet }, config.secret, {
+            //   expiresIn: constants.JWT_EXPIRY,
+            // });
 
-            // let balance = await web3.eth.getBalance(user.address);
+            // let balance = await web3.eth.getBalance(user.wallet);
             // if (parseInt(balance) < parseInt(config.MINIMUM_BALANCE)) {
             //   await web3.eth.sendTransaction({
             //     from: config.FROM_ADDRESS,
-            //     to: user.address,
+            //     to: user.wallet,
             //     value: config.DONATION_AMOUNT,
             //     gas: "8000000",
             //   });
             // }
             return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
               message: constants.RESPONSE_STATUS.SUCCESS,
-              // data: user,
+              data: user,
               auth_token: token,
             });
           } else {
@@ -102,12 +107,12 @@ router.post(
               .status(401)
               .json({ message: constants.MESSAGES.UNAUTHORIZED });
           }
-        // } else {
-        //   return res
-        //     .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
-        //     .json({ message: constants.RESPONSE_STATUS.FAILURE });
-        // }
-      // }
+        } else {
+          return res
+            .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+            .json({ message: constants.RESPONSE_STATUS.FAILURE });
+        }
+      }
     } catch (err) {
       console.log(err);
       return res
@@ -123,13 +128,13 @@ router.post(
 
 router.get("/details", verifyToken, async (req, res) => {
   try {
-    // let userId = req.userId;
-    // let users = await userServiceInstance.getUser({ userId });
+    let userId = req.userId;
+    let users = await userServiceInstance.getUser({ userId });
     return res
       .status(constants.RESPONSE_STATUS_CODES.OK)
       .json({ 
         message: constants.RESPONSE_STATUS.SUCCESS, 
-        // data: users 
+        data: users 
       });
   } catch (err) {
     console.log(err);

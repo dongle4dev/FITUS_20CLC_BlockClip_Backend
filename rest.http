@@ -1,4 +1,12 @@
+POST http://localhost:3001/api/v1/users/login
+Content-Type: application/json
+
+{
+    "wallet": "",
+    "signature": ""
+}
+
 ###
-GET http://localhost:3000/api/v1/users/details
+GET http://localhost:3001/api/v1/users/details
 Content-Type: application/json
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhZGRyZXNzIjoiMHhGMzhiYkI0QjRjNGM0NTY3MjlkOGQ5ODlCMmM4QUJlN2NCNTYzOWIzIiwiaWF0IjoxNzA0ODYxODMxLCJleHAiOjE3MDQ5NDgyMzF9.amz8CyFsu-h60YDHdG6HGLb0RiLUUSy-z9TCJ4yHVQ0

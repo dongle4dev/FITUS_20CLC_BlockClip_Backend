@@ -81,11 +81,11 @@
           const provider = new ethers.providers.Web3Provider(window.ethereum);
           window.ethereum.enable();
           const signer = provider.getSigner();
-          const address = await signer.getAddress();
+          const wallet = await signer.getAddress();
           // Sign the message using the signer account and the nonce value
-          const message = `I am signing this message to prove my identity`;
+          const message = `Sign in to BlockClip`;
           const signature = await signer.signMessage(message);
-          const data = { signature, message, address };
+          const data = { signature, wallet };
           // Send the signed message and the public address of the signer to the backend server for verification
           const response = await fetch('/api/v1/users/login', {
             method: 'POST',
@@ -97,30 +97,37 @@
           });
 
         let token = await response.json();
-        window.localStorage.setItem("token", token);
-        // const newResponse = await fetch('/api/v1/users/verify', {
-        //         method: 'POST',
-        //         headers: {
-        //         'Content-Type': 'application/json',
-        //         'Authorization': `Bearer ${token}`
-        //     }
-        // });
-        // let answer = await newResponse.json();
-        // console.log(answer)
-        // if (answer == "ok") {   
-        //     window.location.href = '/api/v1/users/success';
-        // }
         
-        // else {
-        //     var element = document.getElementById("p1");
-        //     element.innerHTML = "Invalid Token !!!"
-        // }
+        token = token.auth_token;
+        console.log(token);
+        window.localStorage.setItem("token", token);
+        const newResponse = await fetch('/api/v1/users/details', {
+                method: 'GET',
+                headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        let answer = await newResponse.json();
+        console.log(answer)
+        if (answer.message == "success") {   
+          const newResponse = await fetch('/api/v1/users/details', {
+                method: 'GET',
+                headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        let answer = await newResponse.json();
         }
+        
+        else {
+            var element = document.getElementById("p1");
+            element.innerHTML = "Invalid Token !!!"
+        }
+        
           
-      //   } catch (error) {
-      //     console.error(error);
-      //   }
-      // }
+      }
     </script>
   </body>
 </html>
