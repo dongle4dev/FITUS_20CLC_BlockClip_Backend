@@ -56,7 +56,7 @@ router.post(
             signature: req.body.signature,
           })
         ) {
-          var token = jwt.sign({ userId: userExists.id }, config.secret, {
+          var token = jwt.sign({ userWallet: userExists.wallet }, config.secret, {
             expiresIn: constants.JWT_EXPIRY,
           });
           return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
@@ -81,12 +81,9 @@ router.post(
               signature: signature,
             })
           ) {
-            var token = jwt.sign({ userId: user.id }, config.secret, {
+            var token = jwt.sign({ userWallet: userExists.wallet }, config.secret, {
               expiresIn: constants.JWT_EXPIRY,
             });
-            // var token = jwt.sign({ wallet }, config.secret, {
-            //   expiresIn: constants.JWT_EXPIRY,
-            // });
 
             // let balance = await web3.eth.getBalance(user.wallet);
             // if (parseInt(balance) < parseInt(config.MINIMUM_BALANCE)) {
@@ -128,8 +125,8 @@ router.post(
 
 router.get("/details", verifyToken, async (req, res) => {
   try {
-    let userId = req.userId;
-    let users = await userServiceInstance.getUser({ userId });
+    let userWallet = req.userWallet;
+    let users = await userServiceInstance.getUser({ userWallet });
     return res
       .status(constants.RESPONSE_STATUS_CODES.OK)
       .json({ 

@@ -52,10 +52,10 @@ class UserService {
 
   async getUser(params) {
     try {
-      let { userId } = params;
+      let { userWallet } = params;
       let user = await prisma.users.findMany({
         where: {
-          id: userId,
+          wallet: userWallet,
         },
       });
       return user;
