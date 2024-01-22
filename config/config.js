@@ -38,5 +38,8 @@ module.exports = {
   MINIMUM_BALANCE: process.env.MINIMUM_BALANCE,
   BALANCE_URL: process.env.BALANCE_URL,
   TOKEN_DETAILS_URL: process.env.TOKEN_DETAILS_URL,
-  WETH_ADDRESS: process.env.WETH_ADDRESS
+  WETH_ADDRESS: process.env.WETH_ADDRESS,
+  PINATA_API_KEY: process.env.PINATA_API_KEY,
+  PINATA_API_SECRET: process.env.PINATA_API_SECRET,
+  PINATA_JWT: process.env.PINATA_JWT
 };

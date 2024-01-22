@@ -4,7 +4,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const config = require("./config/config");
 const routeV1 = require("./api/v1/");
-const path = require("path");
+
 
 /**
  * Root route, middlewares
@@ -14,8 +14,10 @@ let app = express();
 
 app.use(express.static(__dirname));
 app.use(express.json())
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(bodyParser.json());
+app.use(express.urlencoded({extended: true}))
+// app.use(bodyParser.urlencoded({ extended: false }));
+// app.use(bodyParser.json());
+app.use("/public", express.static("public"));
 
 if (config.NODE_ENV !== "test") {
   app.use(morgan("dev"));

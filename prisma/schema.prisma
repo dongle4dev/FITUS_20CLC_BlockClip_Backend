@@ -18,4 +18,23 @@ model users {
   active        Boolean?        @default(true)
 }
 
+model collections {
+  id                  String          @id @default(auto()) @map("_id") @db.ObjectId
+  collectionID        String?         @unique
+  creator             String          @unique
+  chainID             String
+  title               String
+  title_lowercase     String      
+  description         String?
+  bannerURL           String?
+  averagePrice        Float     @default(0)
+  totalViews          Int       @default(0)
+  category            String?
+  paymentType         String?
+  contractAddress      String?
+  active              Boolean?        @default(true)
+  disabled            Boolean?        @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
 

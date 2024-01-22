@@ -3,6 +3,7 @@ let {
     PAGINATION_DEFAULT_LIMIT,
     PAGINATION_DEFAULT_OFFSET,
     SORT_DIRECTION,
+    CHAINID_DEFAULT
   } = require("../../config/constants");
   
   function getLimit(options) {
@@ -15,6 +16,13 @@ let {
     let offset = PAGINATION_DEFAULT_OFFSET;
     if (options.offset) offset = parseInt(options.offset, 10);
     return offset;
+  }
+
+  function getChainID(options) {
+    let chainID = CHAINID_DEFAULT;
+    if (options.chainID) chainID = options.chainID;
+    
+    return chainID;
   }
   
   function getSortBy(options, defaultArg) {
@@ -67,6 +75,7 @@ let {
     getOffset,
     getSortBy,
     getSearchObj,
-    hasNextPage
+    hasNextPage,
+    getChainID
   };
   
