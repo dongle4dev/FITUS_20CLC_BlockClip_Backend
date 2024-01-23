@@ -12,14 +12,13 @@ const pinata = new pinataSDK(config.PINATA_API_KEY, config.PINATA_API_SECRET);
 
 class CollectionService {
   async createCollection(params, file) {
-    let { title, description, creator, collectionID, chainID, contractAddress, paymentType, category } = params;
+    let { title, description, creator, chainID, contractAddress, paymentType, category } = params;
     try {
       let collection = await prisma.collections.create({
         data: {
           title: title,
           description: description,
           creator: creator,
-          collectionID: collectionID,
           chainID: chainID,
           contractAddress: contractAddress,
           paymentType: paymentType,
