@@ -138,13 +138,11 @@ router.get("/", async (req, res) => {
       // collectionsArray.sort((a, b) => {
       //   return b.orders - a.orders;
       // });
+      collections.collections.count = collection.count
 
       return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
         message: constants.RESPONSE_STATUS.SUCCESS,
-        data: {
-          collections: collections.collections,
-          count: collections.count
-        },
+        data: collections.collections
       });
     } else {
       return res
@@ -226,11 +224,11 @@ router.put(
       if (collection) {
         return res
           .status(constants.RESPONSE_STATUS_CODES.OK)
-          .json({ message: "collection addedd successfully", data: collection });
+          .json({ message: "collection updated successfully", data: collection });
       } else {
         return res
           .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
-          .json({ message: "collection addition failed" });
+          .json({ message: "collection update failed" });
       }
     } catch (err) {
       console.log(err);
