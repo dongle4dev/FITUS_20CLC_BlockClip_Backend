@@ -5,6 +5,8 @@ let {
     SORT_DIRECTION,
     CHAINID_DEFAULT
   } = require("../../config/constants");
+const config = require("../../config/config");
+
   
   function getLimit(options) {
     let limit = parseInt(options.limit, 10) || PAGINATION_DEFAULT_LIMIT;
@@ -23,6 +25,10 @@ let {
     if (options.chainID) chainID = options.chainID;
     
     return chainID;
+  }
+
+  function getFileURL(file) {
+    return file ? `http://localhost:${config.port}/public/` + file.filename : ""
   }
   
   function getSortBy(options, defaultArg) {
@@ -76,6 +82,7 @@ let {
     getSortBy,
     getSearchObj,
     hasNextPage,
-    getChainID
+    getChainID,
+    getFileURL
   };
   

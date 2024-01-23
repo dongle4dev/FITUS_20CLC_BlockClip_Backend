@@ -23,7 +23,6 @@ let constants = require("../../config/constants");
 
 router.post(
   "/",
-  upload.single("collectionImage"),
   async (req, res) => {
     /* 	#swagger.tags = ['Collection']
         #swagger.description = 'Endpoint to create a collection' */
@@ -39,8 +38,6 @@ router.post(
             "apiKeyAuth": []
     }] */
     try {
-      req.body = JSON.parse(req.body.data);
-
       let { title, creator } = req.body;
       
       if (!title || !creator) {
@@ -59,29 +56,44 @@ router.post(
           .json({ message: constants.MESSAGES.INPUT_VALIDATION_ERROR });
       }
 
-    //   for (let data of JSON.parse(address)) {
-    //     if (
-    //       !validate.isValidEthereumAddress(data.address)
-    //       (await collectionServiceInstance.collectionAddressExists({
-    //         address: data.address,
-    //         chain_id: data.chain_id,
-    //       }))
-    //     ) {
-    //       return res
-    //         .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
-    //         .json({ message: constants.MESSAGES.INPUT_VALIDATION_ERROR });
-    //     }
-    //   }
-
-      
       let collection = await collectionServiceInstance.createCollection(
-        req.body,
-        req.file
+        req.body
       );
       if (collection) {
         return res
           .status(constants.RESPONSE_STATUS_CODES.OK)
           .json({ message: constants.RESPONSE_STATUS.SUCCESS, data: collection });
+      } else {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: constants.RESPONSE_STATUS.FAILURE });
+      }
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+    }
+  }
+);
+
+/**
+ *  Adds a new collection of NFT token
+ *  @param collectionImage type: file
+ */
+
+router.post(
+  "/image",
+  upload.single("collectionImage"),
+  async (req, res) => {
+    try {
+      let bannerURL = requestUtil.getFileURL(req.file);
+
+
+      if (bannerURL) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.OK)
+          .json({ message: constants.RESPONSE_STATUS.SUCCESS, data: bannerURL });
       } else {
         return res
           .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
@@ -113,7 +125,6 @@ router.get("/", async (req, res) => {
       orderBy,
       chainID
     });
-    console.log(collections);
     if (collections) {
       /**
        * re-form collections array to include count of orders in each object
@@ -186,72 +197,48 @@ router.get(
 );
 
 /**
- *  Updates an existing collection of NFT token
- *  @params collectionId type: Integer
- *  @params description type: String
- *  @params url type: String
- *  @params address type: Array of Objects
- *  @params collectionImage type: File
+ *  Updates an existing collection of NFT token by id
  */
 
-// router.put(
-//   "/:collectionId",
-//   verifyAdmin,
-//   upload.single("collectionImage"),
-//   async (req, res) => {
-//     try {
-//       let params = { ...req.params, ...req.body };
+router.put(
+  "/:id",
+  async (req, res) => {
+    try {
+      let params = { ...req.params, ...req.body };
 
-//       if (!params.collectionId) {
-//         return res
-//           .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
-//           .json({ message: constants.MESSAGES.INPUT_VALIDATION_ERROR });
-//       }
+      if (!params.id) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: constants.MESSAGES.INPUT_VALIDATION_ERROR });
+      }
 
-//       let collectionExists = await collectionServiceInstance.getcollection(params);
+      let collectionExists = await collectionServiceInstance.getCollectionByID(params);
 
-//       if (!collectionExists) {
-//         return res
-//           .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
-//           .json({ message: "collection doesnt exists" });
-//       }
+      if (collectionExists.length === 0) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: "collection doesnt exists" });
+      }
 
-//       if (params.address) {
-//         for (data of JSON.parse(params.address)) {
-//           if (
-//             !validate.isValidEthereumAddress(data.address) ||
-//             (await collectionServiceInstance.collectionAddressExists({
-//               address: data.address,
-//               chain_id: data.chain_id,
-//             }))
-//           ) {
-//             return res
-//               .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
-//               .json({ message: "collection address already exists" });
-//           }
-//         }
-//       }
-
-//       let collection = await collectionServiceInstance.updatecollection(
-//         params,
-//         req.file
-//       );
-//       if (collection) {
-//         return res
-//           .status(constants.RESPONSE_STATUS_CODES.OK)
-//           .json({ message: "collection addedd successfully", data: collection });
-//       } else {
-//         return res
-//           .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
-//           .json({ message: "collection addition failed" });
-//       }
-//     } catch (err) {
-//       console.log(err);
-//       return res
-//         .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
-//         .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
-//     }
-//   }
-// );
+      let collection = await collectionServiceInstance.updateCollection(
+        params
+      );
+      if (collection) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.OK)
+          .json({ message: "collection addedd successfully", data: collection });
+      } else {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: "collection addition failed" });
+      }
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+    }
+  }
+);
 
 module.exports = router;
