@@ -126,7 +126,6 @@ router.post(
 router.get("/details", verifyToken, async (req, res) => {
   try {
     let userWallet = req.userWallet;
-    console.log(userWallet);
     let users = await userServiceInstance.getUser({ userWallet });
     return res
       .status(constants.RESPONSE_STATUS_CODES.OK)

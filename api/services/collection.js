@@ -39,14 +39,30 @@ class CollectionService {
     }
   }
 
-  async getCollections({ limit, offset, orderBy, chainID }) {
+  async getCollections({ limit, offset, orderBy, chainID, title, creator }) {
     try {
       let where = {
         active: true,
-        chainID: chainID
+        chainID: chainID,
+        OR:[
+          {title: {
+            contains: title,
+          }},
+          {title_lowercase: {
+            contains: title,
+          }},
+        ],
+        creator: {
+          contains: creator
+        }
       };
 
-      let count = await prisma.collections.count({ where });
+      let count = 0;
+      if (creator !== "") {
+        count = await prisma.collections.count({ where });
+      } else {
+        count = await prisma.collections.count({ where: {active: true, chainID: chainID} });
+      }
       let collections = await prisma.collections.findMany({
         where,
         orderBy,
@@ -117,6 +133,30 @@ class CollectionService {
 //     }
 //   }
 
+async getCollectionsByTitle(params) {
+  try {
+    let title = params;
+    
+    const collections = await prisma.collections.findMany({
+      where: {
+        OR:[
+          {title: {
+            contains: title,
+          }},
+          {title_lowercase: {
+            contains: title,
+          }},
+        ]
+      },
+    });
+
+    return collections;
+  } catch (err) {
+    console.log(err);
+    throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+  }
+}
+
   async getCollectionByCollectionID(params) {
     try {
       let { collectionID } = params;
@@ -147,9 +187,9 @@ class CollectionService {
     try {
       let current = await this.getCollectionByID(params);
       let { collectionID: current_collectionID, title: current_title, description: current_description, bannerURL: current_bannerURL, 
-            active: current_active, disabled: current_disabled} = current;
+            active: current_active, disabled: current_disabled, averagePrice: current_averagePrice, totalViews: current_totalViews} = current;
       let { collectionID: params_collectionID, title: params_title, description: params_description, bannerURL: params_bannerURL, 
-        active: params_active, disabled: params_disabled } = params;
+            active: params_active, disabled: params_disabled, averagePrice: params_averagePrice, totalViews: params_totalViews } = params;
 
       let collection = await prisma.collections.update({
         where: { id: params.id },
@@ -163,6 +203,8 @@ class CollectionService {
           collectionID: params_collectionID ? params_collectionID : current_collectionID,
           active: params_active ? params_active : current_active,
           disabled: params_disabled ? params_disabled : current_disabled,
+          averagePrice: params_averagePrice ? params_averagePrice : current_averagePrice,
+          totalViews: params_totalViews ? params_totalViews : current_totalViews,
         },
       });
       return collection;

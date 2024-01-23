@@ -3,7 +3,9 @@ let {
     PAGINATION_DEFAULT_LIMIT,
     PAGINATION_DEFAULT_OFFSET,
     SORT_DIRECTION,
-    CHAINID_DEFAULT
+    CHAINID_DEFAULT,
+    KEYWORD_DEFAULT, 
+    CREATOR_DEFAULT
   } = require("../../config/constants");
 const config = require("../../config/config");
 
@@ -29,6 +31,20 @@ const config = require("../../config/config");
 
   function getFileURL(file) {
     return file ? `http://localhost:${config.port}/public/` + file.filename : ""
+  }
+
+  function getKeyword(options) {
+    let keyword = KEYWORD_DEFAULT;
+    if (options.search) keyword = options.search;
+    
+    return keyword;
+  }
+
+  function getCreator(options) {
+    let creator = CREATOR_DEFAULT;
+    if (options.creator) creator = options.creator;
+    
+    return creator;
   }
   
   function getSortBy(options, defaultArg) {
@@ -83,6 +99,8 @@ const config = require("../../config/config");
     getSearchObj,
     hasNextPage,
     getChainID,
-    getFileURL
+    getFileURL,
+    getKeyword,
+    getCreator
   };
   

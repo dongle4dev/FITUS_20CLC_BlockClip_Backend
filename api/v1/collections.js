@@ -118,12 +118,25 @@ router.get("/", async (req, res) => {
     let offset = requestUtil.getOffset(req.query);
     let orderBy = requestUtil.getSortBy(req.query, "+id");
     let chainID = requestUtil.getChainID(req.query);
+    let title = requestUtil.getKeyword(req.query);
+    let creator = requestUtil.getCreator(req.query);
+
+    if (creator !== "") {
+      if (!validate.isValidEthereumAddress(creator)) {
+        return res
+        .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+        .json({ message: 'creator address is not valid' });
+      }
+    }
+
 
     let collections = await collectionServiceInstance.getCollections({
       limit,
       offset,
       orderBy,
-      chainID
+      chainID,
+      title,
+      creator
     });
     if (collections) {
       /**
@@ -138,11 +151,13 @@ router.get("/", async (req, res) => {
       // collectionsArray.sort((a, b) => {
       //   return b.orders - a.orders;
       // });
-      collections.collections.count = collection.count
 
       return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
         message: constants.RESPONSE_STATUS.SUCCESS,
-        data: collections.collections
+        data: {
+          collections: collections.collections,
+          count: collections.count
+        }
       });
     } else {
       return res
@@ -156,6 +171,36 @@ router.get("/", async (req, res) => {
       .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
   }
 });
+
+
+/**
+ *  Gets single collection detail by title
+ *  @param search type: string
+ */
+
+router.get("/title",
+  async (req, res) => {
+    try {
+      let title = requestUtil.getKeyword(req.query);
+
+      let collection = await collectionServiceInstance.getCollectionsByTitle(title);
+      if (collection) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.OK)
+          .json({ message: constants.RESPONSE_STATUS.SUCCESS, data: collection });
+      } else {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.NOT_FOUND)
+          .json({ message: constants.RESPONSE_STATUS.NOT_FOUND });
+      }
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+    }
+  }
+);
 
 /**
  *  Gets single collection detail by collectionID
@@ -193,6 +238,7 @@ router.get(
     }
   }
 );
+
 
 /**
  *  Updates an existing collection of NFT token by id
