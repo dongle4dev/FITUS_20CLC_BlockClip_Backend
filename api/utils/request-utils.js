@@ -46,7 +46,14 @@ const config = require("../../config/config");
     
     return creator;
   }
-  
+
+  function getCategory(options) {
+    let category = KEYWORD_DEFAULT;
+    if (options.category) category = options.category;
+    
+    return category;
+  }
+
   function getSortBy(options, defaultArg) {
     // required query param sort with +/-field
     let sort = options.sort || defaultArg || "+id";
@@ -101,6 +108,7 @@ const config = require("../../config/config");
     getChainID,
     getFileURL,
     getKeyword,
-    getCreator
+    getCreator,
+    getCategory
   };
   

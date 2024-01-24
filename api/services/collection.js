@@ -39,7 +39,7 @@ class CollectionService {
     }
   }
 
-  async getCollections({ limit, offset, orderBy, chainID, title, creator }) {
+  async getCollections({ limit, offset, orderBy, chainID, title, creator, category }) {
     try {
       let where = {
         active: true,
@@ -54,11 +54,14 @@ class CollectionService {
         ],
         creator: {
           contains: creator
+        },
+        category: {
+          contains: category
         }
       };
 
       let count = 0;
-      if (creator !== "") {
+      if (creator !== "" || category !== "") {
         count = await prisma.collections.count({ where });
       } else {
         count = await prisma.collections.count({ where: {active: true, chainID: chainID} });

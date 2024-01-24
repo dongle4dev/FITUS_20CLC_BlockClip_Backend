@@ -120,6 +120,7 @@ router.get("/", async (req, res) => {
     let chainID = requestUtil.getChainID(req.query);
     let title = requestUtil.getKeyword(req.query);
     let creator = requestUtil.getCreator(req.query);
+    let category = requestUtil.getCategory(req.query);
 
     if (creator !== "") {
       if (!validate.isValidEthereumAddress(creator)) {
@@ -136,7 +137,8 @@ router.get("/", async (req, res) => {
       orderBy,
       chainID,
       title,
-      creator
+      creator,
+      category
     });
     if (collections) {
       /**
