@@ -13,8 +13,8 @@ class UserService {
       let { wallet } = params;
       let user = await prisma.users.create({
         data: {
-            wallet: wallet.toLowerCase(),
-            username: wallet.toLowerCase()
+            wallet: wallet,
+            username: wallet
         },
       });
       return user;
