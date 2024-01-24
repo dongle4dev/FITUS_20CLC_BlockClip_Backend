@@ -4,6 +4,7 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./swagger.json');
 const users = require("./users");
 const collections = require("./collections");
+const tokens = require("./tokens");
 const path = require("path");
 
 /**
@@ -17,5 +18,6 @@ router.use('/api-docs', swaggerUi.serve);
 router.get('/api-docs', swaggerUi.setup(swaggerDocument));
 router.use("/users", users);
 router.use("/collections", collections);
+router.use("/tokens", tokens);
 
 module.exports = router;

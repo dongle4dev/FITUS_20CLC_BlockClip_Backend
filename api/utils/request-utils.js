@@ -33,25 +33,11 @@ const config = require("../../config/config");
     return file ? `http://localhost:${config.port}/public/` + file.filename : ""
   }
 
-  function getKeyword(options) {
+  function getKeyword(options, query) {
     let keyword = KEYWORD_DEFAULT;
-    if (options.search) keyword = options.search;
+    if (options[query]) keyword = options[query];
     
     return keyword;
-  }
-
-  function getCreator(options) {
-    let creator = CREATOR_DEFAULT;
-    if (options.creator) creator = options.creator;
-    
-    return creator;
-  }
-
-  function getCategory(options) {
-    let category = KEYWORD_DEFAULT;
-    if (options.category) category = options.category;
-    
-    return category;
   }
 
   function getSortBy(options, defaultArg) {
@@ -108,7 +94,5 @@ const config = require("../../config/config");
     getChainID,
     getFileURL,
     getKeyword,
-    getCreator,
-    getCategory
   };
   

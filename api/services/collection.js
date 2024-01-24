@@ -136,29 +136,29 @@ class CollectionService {
 //     }
 //   }
 
-async getCollectionsByTitle(params) {
-  try {
-    let title = params;
-    
-    const collections = await prisma.collections.findMany({
-      where: {
-        OR:[
-          {title: {
-            contains: title,
-          }},
-          {title_lowercase: {
-            contains: title,
-          }},
-        ]
-      },
-    });
+  async getCollectionsByTitle(params) {
+    try {
+      let title = params;
+      
+      const collections = await prisma.collections.findMany({
+        where: {
+          OR:[
+            {title: {
+              contains: title,
+            }},
+            {title_lowercase: {
+              contains: title,
+            }},
+          ]
+        },
+      });
 
-    return collections;
-  } catch (err) {
-    console.log(err);
-    throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+      return collections;
+    } catch (err) {
+      console.log(err);
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
   }
-}
 
   async getCollectionByCollectionID(params) {
     try {

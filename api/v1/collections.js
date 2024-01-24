@@ -78,7 +78,7 @@ router.post(
 );
 
 /**
- *  Adds a new collection of NFT token
+ *  Post image of collection
  *  @param collectionImage type: file
  */
 
@@ -118,9 +118,9 @@ router.get("/", async (req, res) => {
     let offset = requestUtil.getOffset(req.query);
     let orderBy = requestUtil.getSortBy(req.query, "+id");
     let chainID = requestUtil.getChainID(req.query);
-    let title = requestUtil.getKeyword(req.query);
-    let creator = requestUtil.getCreator(req.query);
-    let category = requestUtil.getCategory(req.query);
+    let title = requestUtil.getKeyword(req.query, "search");
+    let creator = requestUtil.getKeyword(req.query, "creator");
+    let category = requestUtil.getKeyword(req.query, "category");
 
     if (creator !== "") {
       if (!validate.isValidEthereumAddress(creator)) {
@@ -129,7 +129,6 @@ router.get("/", async (req, res) => {
         .json({ message: 'creator address is not valid' });
       }
     }
-
 
     let collections = await collectionServiceInstance.getCollections({
       limit,
