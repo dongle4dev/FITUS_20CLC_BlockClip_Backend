@@ -49,7 +49,6 @@ model tokens {
   title_lowercase     String      
   description         String?
   source              String?
-  paymentType         String?
   contractAddress     String?
   active              Boolean?        @default(true)
   disabled            Boolean?        @default(false)
