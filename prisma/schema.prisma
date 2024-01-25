@@ -56,3 +56,7 @@ model tokens {
   updatedAt           DateTime        @updatedAt
 }
 
+model tokens_users {
+  tokenID             String         @unique
+  listOfLikedUsers    
+}

@@ -24,10 +24,16 @@ class UserService {
     }
   }
 
-  async getUsers({ limit, offset, orderBy }) {
+  async getUsers({ limit, offset, orderBy, username, wallet }) {
     try {
       let where = {
         active: true,
+        username: {
+          contains: username
+        },
+        wallet: {
+          contains: wallet
+        }
       };
 
       let count = await prisma.users.count({ where });
@@ -40,6 +46,7 @@ class UserService {
 
       return {
         users,
+        count,
         limit,
         offset,
         has_next_page: hasNextPage({ limit, offset, count }),
@@ -58,7 +65,7 @@ class UserService {
           wallet: userWallet,
         },
       });
-      return user;
+      return user.at(0);
     } catch (err) {
       console.log(err);
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);

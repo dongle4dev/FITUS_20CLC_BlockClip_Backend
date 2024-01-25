@@ -8,7 +8,8 @@ const constants = require("../../config/constants");
 const verifyToken = require("../middlewares/verify-token");
 const userService = require("../services/user");
 let userServiceInstance = new userService();
-
+let requestUtil = require("../utils/request-utils");
+const validate = require("../utils/helper");
 
 // const ethers = require("ethers");
 // let rpc = config.MATIC_RPC;
@@ -140,6 +141,96 @@ router.get("/details", verifyToken, async (req, res) => {
       .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
   }
 });
+
+/**
+ *  Gets the user details by wallet
+ */
+
+router.get(
+  "/:wallet", 
+  [check("wallet", "A valid id is required").exists()],
+  async (req, res) => {
+  try {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+        .json({ error: errors.array() });
+    }
+
+    let wallet = req.params.wallet;
+
+    if (!validate.isValidEthereumAddress(wallet)) {
+      return res
+      .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+      .json({ message: 'wallet is not valid' });
+  }
+
+    let users = await userServiceInstance.getUser({ userWallet: wallet });
+
+    if (users) {
+      return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
+        message: constants.RESPONSE_STATUS.SUCCESS,
+        data: users
+      });
+    } else {
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+        .json({ message: constants.RESPONSE_STATUS.FAILURE });
+    }
+    
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+  }
+});
+
+
+/**
+ *  Gets all the user details
+ */
+
+router.get("/", async (req, res) => {
+  try {
+    let limit = requestUtil.getLimit(req.query);
+    let offset = requestUtil.getOffset(req.query);
+    let orderBy = requestUtil.getSortBy(req.query, "+id");
+    let username = requestUtil.getKeyword(req.query, "username");
+    let wallet = requestUtil.getKeyword(req.query, "search");
+
+    let users = await userServiceInstance.getUsers({
+      limit,
+      offset,
+      orderBy,
+      username,
+      wallet
+    })
+
+    if (users) {
+      return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
+        message: constants.RESPONSE_STATUS.SUCCESS,
+        data: {
+          users: users.users,
+          count: users.count
+        }
+      });
+    } else {
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+        .json({ message: constants.RESPONSE_STATUS.FAILURE });
+    }
+    
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+  }
+});
+
 
 
 module.exports = router;

@@ -77,6 +77,67 @@ router.get("/", async (req, res) => {
 });
 
 /**
+ *  Gets all the token details by user
+ */
+
+router.get(
+  "/user/:wallet", 
+  [check("wallet", "A valid id is required").exists()],
+  async (req, res) => {
+  try {
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+        .json({ error: errors.array() });
+    }
+
+    let wallet = req.params.wallet;
+
+    if (!validate.isValidEthereumAddress(wallet)) {
+      return res
+      .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+      .json({ message: 'wallet is not valid' });
+  }
+  
+
+    let limit = requestUtil.getLimit(req.query);
+    let offset = requestUtil.getOffset(req.query);
+    let orderBy = requestUtil.getSortBy(req.query, "+id");
+    let title = requestUtil.getKeyword(req.query, "search");
+    let collectionID = requestUtil.getKeyword(req.query, "collectionID");
+
+    
+    
+    let user = await userServiceInstance.getUser({ wallet });
+
+    if (!user) {
+      return res.status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST).json({
+        message: 'wallet does not exist',
+      });
+    }
+
+    let tokens = await tokenServiceInstance.getTokensByUser({
+      limit, offset, orderBy, title, wallet, collectionID
+    });
+
+    return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
+      message: constants.RESPONSE_STATUS.SUCCESS,
+      data: {
+        tokens: tokens.tokens,
+        count: tokens.count
+      }
+    });
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+  }
+});
+
+/**
  *  Adds a new token 
  */
 

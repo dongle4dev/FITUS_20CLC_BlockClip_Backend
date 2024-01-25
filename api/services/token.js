@@ -133,6 +133,50 @@ class TokenService {
     }
   }
 
+  async getTokensByUser({limit, offset, orderBy, title, wallet, collectionID}) {
+    try {
+      let where = {
+        active: true,
+        collectionID: {
+          contains: collectionID
+        },
+        OR:[
+          {title: {
+            contains: title,
+          }},
+          {title_lowercase: {
+            contains: title,
+          }},
+        ],
+        OR:[
+          {creator: {
+            contains: wallet,
+          }},
+          {owner: {
+            contains: wallet,
+          }},
+        ],
+      };
+
+      let count = await prisma.tokens.count({ where });
+      let tokens = await prisma.tokens.findMany({
+        where,
+        orderBy,
+        take: limit,
+        skip: offset
+      }); 
+      return {
+        tokens,
+        count,
+        limit,
+        offset
+      };
+    } catch (err) {
+      console.log(err);
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   async updateToken(params) {
     try {
       let current = await this.getTokenByID(params);
