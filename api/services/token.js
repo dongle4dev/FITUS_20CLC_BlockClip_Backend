@@ -185,7 +185,7 @@ class TokenService {
 
       const res = await pinata.pinFileToIPFS(stream, options);
 
-      return {source: `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}`};
+      return `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}`;
     } catch (err) {
       console.log(err);
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
