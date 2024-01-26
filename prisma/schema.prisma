@@ -13,8 +13,8 @@ model users {
   username      String          @unique 
   avatar        String?
   cover         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
   active        Boolean?        @default(true)
 }
 
@@ -54,9 +54,6 @@ model tokens {
   disabled            Boolean?        @default(false)
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
-}
-
-model tokens_users {
-  tokenID             String         @unique
-  listOfLikedUsers    
+  listOfLikedUsers    String[] 
+  listOfFavoriteUsers    String[]          
 }

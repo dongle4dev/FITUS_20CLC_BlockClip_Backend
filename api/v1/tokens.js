@@ -12,6 +12,8 @@ const helper = require("../utils/helper");
 const upload = require("../utils/upload");
 let requestUtil = require("../utils/request-utils");
 const validate = require("../utils/helper");
+const verifyToken = require("../middlewares/verify-token");
+
 
 
 /**
@@ -108,8 +110,6 @@ router.get(
     let title = requestUtil.getKeyword(req.query, "search");
     let collectionID = requestUtil.getKeyword(req.query, "collectionID");
 
-    
-    
     let user = await userServiceInstance.getUser({ wallet });
 
     if (!user) {
@@ -136,6 +136,57 @@ router.get(
       .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
   }
 });
+
+/**
+ *  Gets all the favorited token details by user
+ */
+
+router.get(
+  "/favorite", 
+  verifyToken,
+  async (req, res) => {
+  try {
+    let userWallet = req.userWallet;
+
+    if (!validate.isValidEthereumAddress(userWallet)) {
+      return res
+      .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+      .json({ message: 'wallet is not valid' });
+    }
+  
+
+    let limit = requestUtil.getLimit(req.query);
+    let offset = requestUtil.getOffset(req.query);
+    let orderBy = requestUtil.getSortBy(req.query, "+id");
+    let title = requestUtil.getKeyword(req.query, "search");
+
+    let user = await userServiceInstance.getUser({ userWallet });
+
+    if (!user) {
+      return res.status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST).json({
+        message: 'user does not exist',
+      });
+    }
+
+    let tokens = await tokenServiceInstance.getFavoritedTokensByUser({
+      limit, offset, orderBy, title, userWallet
+    });
+
+    return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
+      message: constants.RESPONSE_STATUS.SUCCESS,
+      data: {
+        tokens: tokens.tokens,
+        count: tokens.count
+      }
+    });
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+  }
+});
+
 
 /**
  *  Adds a new token 
@@ -220,8 +271,187 @@ router.post(
 );
 
 /**
- *  Gets single collection detail by collectionID
- *  @param collectionID type: string
+ *  Like the token
+ */
+
+router.get(
+  "/:tokenID/like",
+  [check("tokenID", "A valid tokenID is required").exists()],
+  verifyToken,
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+
+      if (!errors.isEmpty()) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ error: errors.array() });
+      }
+
+      let userWallet = req.userWallet;
+      if (!validate.isValidEthereumAddress(userWallet)) {
+        return res
+        .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+        .json({ message: 'wallet is not valid' });
+      }
+
+      let token = await tokenServiceInstance.likeToken({userWallet, tokenID: req.params.tokenID});
+      if (token) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.OK)
+          .json({ message: constants.RESPONSE_STATUS.SUCCESS, data: token });
+      } else {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.NOT_FOUND)
+          .json({ message: constants.RESPONSE_STATUS.NOT_FOUND });
+      }
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+    }
+  }
+);
+
+/**
+ *  Check user like the token?
+ */
+
+router.get(
+  "/:tokenID/isLiked",
+  [check("tokenID", "A valid tokenID is required").exists()],
+  verifyToken,
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+
+      if (!errors.isEmpty()) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ error: errors.array() });
+      }
+
+      let userWallet = req.userWallet;
+
+      if (!validate.isValidEthereumAddress(userWallet)) {
+        return res
+        .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+        .json({ message: 'wallet is not valid' });
+      }
+    
+
+      let token = await tokenServiceInstance.isLikedToken({userWallet, tokenID: req.params.tokenID});
+      if (token) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.OK)
+          .json({ message: constants.RESPONSE_STATUS.SUCCESS, data: token });
+      } else {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.NOT_FOUND)
+          .json({ message: constants.RESPONSE_STATUS.NOT_FOUND });
+      }
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+    }
+  }
+);
+
+/**
+ *  Add the token to favorite list
+ */
+
+router.get(
+  "/:tokenID/favorite",
+  [check("tokenID", "A valid tokenID is required").exists()],
+  verifyToken,
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+
+      if (!errors.isEmpty()) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ error: errors.array() });
+      }
+
+      let userWallet = req.userWallet;
+      if (!validate.isValidEthereumAddress(userWallet)) {
+        return res
+        .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+        .json({ message: 'wallet is not valid' });
+      }
+    
+
+      let token = await tokenServiceInstance.addTokenToFavorites({userWallet, tokenID: req.params.tokenID});
+      if (token) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.OK)
+          .json({ message: constants.RESPONSE_STATUS.SUCCESS, data: token });
+      } else {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.NOT_FOUND)
+          .json({ message: constants.RESPONSE_STATUS.NOT_FOUND });
+      }
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+    }
+  }
+);
+
+/**
+ *  Check user add the token to favorite list?
+ */
+
+router.get(
+  "/:tokenID/isFavorited",
+  [check("tokenID", "A valid tokenID is required").exists()],
+  verifyToken,
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+
+      if (!errors.isEmpty()) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ error: errors.array() });
+      }
+
+      let userWallet = req.userWallet;
+      if (!validate.isValidEthereumAddress(userWallet)) {
+        return res
+        .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+        .json({ message: 'wallet is not valid' });
+      }
+
+      let token = await tokenServiceInstance.isFavoriteToken({userWallet, tokenID: req.params.tokenID});
+      if (token) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.OK)
+          .json({ message: constants.RESPONSE_STATUS.SUCCESS, data: token });
+      } else {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.NOT_FOUND)
+          .json({ message: constants.RESPONSE_STATUS.NOT_FOUND });
+      }
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+    }
+  }
+);
+
+
+/**
+ *  Gets single collection detail by tokenID
  */
 
 router.get(
@@ -255,7 +485,6 @@ router.get(
     }
   }
 );
-
 
 /**
  *  Updates an existing NFT token by id

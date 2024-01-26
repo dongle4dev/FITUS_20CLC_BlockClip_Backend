@@ -3,8 +3,8 @@ let constants = require("../../config/constants");
 const helper = require("../utils/helper");
 const prisma = require("../../prisma");
 const config = require("../../config/config");
-const categoryService = require("./category");
-let categoryServiceInstance = new categoryService();
+const userService = require("./user");
+let userServiceInstance = new userService();
 const pinataSDK = require('@pinata/sdk');
 const pinata = new pinataSDK(config.PINATA_API_KEY, config.PINATA_API_SECRET);
 const fs = require('fs');
@@ -15,12 +15,12 @@ class TokenService {
    * takes chain id and user address as parameter and fetches balances of each token address
    * @param {params} params object of chainid, user address
    */
-  async getTokens({limit, offset, orderBy, title, creator, owner, collectionID}) {
+  async getTokens({limit, offset, orderBy, title, creator, owner, tokenID}) {
     try {
       let where = {
         active: true,
-        collectionID: {
-          contains: collectionID
+        tokenID: {
+          contains: tokenID
         },
         OR:[
           {title: {
@@ -39,7 +39,7 @@ class TokenService {
       };
 
       let count = 0;
-      if (creator !== "" || owner !== "" || collectionID !== "" || title !== "") {
+      if (creator !== "" || owner !== "" || tokenID !== "" || title !== "") {
         count = await prisma.tokens.count({ where });
       } else {
         count = await prisma.tokens.count({ where: {active: true} });
@@ -82,6 +82,7 @@ class TokenService {
       delete tempToken.id, tempToken.tokenID, 
       delete tempToken.active, delete tempToken.disabled, 
       delete tempToken.updatedAt, delete tempToken.createdAt;
+      delete tempToken.listOfLikedUsers, delete tempToken.listOfFavoriteUsers;
       const res = await pinata.pinJSONToIPFS(tempToken);
 
       return {token, tokenURI: `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}`};
@@ -133,12 +134,12 @@ class TokenService {
     }
   }
 
-  async getTokensByUser({limit, offset, orderBy, title, wallet, collectionID}) {
+  async getTokensByUser({limit, offset, orderBy, title, wallet, tokenID}) {
     try {
       let where = {
         active: true,
-        collectionID: {
-          contains: collectionID
+        tokenID: {
+          contains: tokenID
         },
         OR:[
           {title: {
@@ -177,6 +178,42 @@ class TokenService {
     }
   }
 
+  async getFavoritedTokensByUser({limit, offset, orderBy, title, userWallet}) {
+    try {
+      let where = {
+        active: true,
+        OR:[
+          {title: {
+            contains: title,
+          }},
+          {title_lowercase: {
+            contains: title,
+          }},
+        ],
+        listOfFavoriteUsers: { 
+          hasSome: [userWallet]
+        }
+      };
+
+      let count = await prisma.tokens.count({ where });
+      let tokens = await prisma.tokens.findMany({
+        where,
+        orderBy,
+        take: limit,
+        skip: offset
+      }); 
+      return {
+        tokens,
+        count,
+        limit,
+        offset
+      };
+    } catch (err) {
+      console.log(err);
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   async updateToken(params) {
     try {
       let current = await this.getTokenByID(params);
@@ -185,7 +222,7 @@ class TokenService {
             tokenID: params_tokenID } = params;
       let { description: current_description, source: current_source, 
             title: current_title, active: current_active, disabled: current_disabled,
-            tokenID: current_tokenID} = current;
+            tokenID: current_tokenID } = current;
       let token = await prisma.tokens.update({
         where: {
           id: params.id
@@ -205,7 +242,7 @@ class TokenService {
           title_lowercase: params_title 
             ? params_title.toLowerCase()
             : current_title.toLowerCase(),
-          tokenID: params_tokenID? params_tokenID : current_tokenID
+          tokenID: params_tokenID? params_tokenID : current_tokenID,
         },
       });
 
@@ -229,6 +266,116 @@ class TokenService {
       const res = await pinata.pinFileToIPFS(stream, options);
 
       return `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}`;
+    } catch (err) {
+      console.log(err);
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async likeToken(params) {
+    try {
+      let { tokenID, userWallet } = params;
+      let tokens = await prisma.tokens.findMany({
+        where: { 
+          tokenID: tokenID
+        },
+      });
+
+      if (tokens.length > 0) {
+        tokens = tokens.at(0);
+        if (tokens.listOfLikedUsers.includes(userWallet)) {
+          helper.removeItemOnce(tokens.listOfLikedUsers, userWallet);
+        } else {
+          tokens.listOfLikedUsers.push(userWallet);
+        }
+        let token = await prisma.tokens.update({
+          where: {
+            tokenID: tokenID
+          },
+          data: {
+            listOfLikedUsers: tokens.listOfLikedUsers
+          }
+        })
+        return token;
+      }
+      else return tokens;
+    } catch (err) {
+      console.log(err);
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async isLikedToken(params) {
+    try {
+      let { tokenID, userWallet } = params;
+      let tokens = await prisma.tokens.findMany({
+        where: { 
+          tokenID: tokenID,
+          listOfLikedUsers: { 
+            hasSome: [userWallet]
+          }
+        },
+      });
+
+      if (tokens.length > 0) {
+        return { isLiked: true };
+      }
+      else return { isLiked: false };
+    } catch (err) {
+      console.log(err);
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async addTokenToFavorites(params) {
+    try {
+      let { tokenID, userWallet } = params;
+      let tokens = await prisma.tokens.findMany({
+        where: { 
+          tokenID: tokenID
+        },
+      });
+
+      if (tokens.length > 0) {
+        tokens = tokens.at(0);
+        if (tokens.listOfFavoriteUsers.includes(userWallet)) {
+          helper.removeItemOnce(tokens.listOfFavoriteUsers, userWallet);
+        } else {
+          tokens.listOfFavoriteUsers.push(userWallet);
+        }
+        let token = await prisma.tokens.update({
+          where: {
+            tokenID: tokenID
+          },
+          data: {
+            listOfFavoriteUsers: tokens.listOfFavoriteUsers
+          }
+        })
+        return token;
+      }
+      else return tokens;
+    } catch (err) {
+      console.log(err);
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async isFavoriteToken(params) {
+    try {
+      let { tokenID, userWallet } = params;
+      let tokens = await prisma.tokens.findMany({
+        where: { 
+          tokenID: tokenID,
+          listOfFavoriteUsers: { 
+            hasSome: [userWallet]
+          }
+        },
+      });
+
+      if (tokens.length > 0) {
+        return { isFavorited: true };
+      }
+      else return { isFavorited: false };
     } catch (err) {
       console.log(err);
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);

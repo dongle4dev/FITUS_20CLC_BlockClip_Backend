@@ -33,6 +33,14 @@ function toHex(value) {
   return ethers.numberToHex(value);
 }
 
+function removeItemOnce(arr, value) {
+  var index = arr.indexOf(value);
+  if (index > -1) {
+    arr.splice(index, 1);
+  }
+  return arr;
+}
+
 // async function notify({ userId, message, order_id, type }) {
 //   try {
 //     let notification = await prisma.notifications.create({
@@ -256,6 +264,7 @@ module.exports = {
   toChecksumAddress,
   toNumber,
   toHex,
+  removeItemOnce,
 //   matic_balance,
 //   ethereum_balance,
 //   executeMetaTransaction,
