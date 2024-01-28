@@ -16,6 +16,8 @@ model users {
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   active        Boolean?        @default(true)
+  seller_marketorders  marketorders[]   @relation("seller_marketorders")
+  buyer_marketorders  marketorders[]     @relation("buyer_marketorders")
 }
 
 model collections {
@@ -55,5 +57,24 @@ model tokens {
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
   listOfLikedUsers    String[] 
-  listOfFavoriteUsers    String[]          
+  listOfFavoriteUsers    String[]    
+  totalViews          Int             @default(0)
+  marketorders        marketorders[]
+}
+
+model marketorders {
+  id                  String          @id @default(auto()) @map("_id") @db.ObjectId
+  tokenID             String          @unique
+  chainID             String
+  tokenAddress        String
+  buyer               String?          
+  seller              String  
+  paymentType         String
+  status              Int          
+  price               Float
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  buyerWallet         users?           @relation("buyer_marketorders", fields: [buyer], references: [wallet])
+  sellerWallet        users           @relation("seller_marketorders", fields: [seller], references: [wallet])
+  tokens              tokens          @relation(fields: [tokenID], references: [tokenID])
 }

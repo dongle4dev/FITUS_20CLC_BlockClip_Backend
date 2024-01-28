@@ -274,7 +274,7 @@ router.post(
  *  Like the token
  */
 
-router.get(
+router.put(
   "/:tokenID/like",
   [check("tokenID", "A valid tokenID is required").exists()],
   verifyToken,
@@ -364,7 +364,7 @@ router.get(
  *  Add the token to favorite list
  */
 
-router.get(
+router.put(
   "/:tokenID/favorite",
   [check("tokenID", "A valid tokenID is required").exists()],
   verifyToken,
@@ -449,6 +449,41 @@ router.get(
   }
 );
 
+/**
+ *  View the token
+ */
+
+router.put(
+  "/:tokenID/view",
+  [check("tokenID", "A valid tokenID is required").exists()],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+
+      if (!errors.isEmpty()) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ error: errors.array() });
+      }
+
+      let token = await tokenServiceInstance.viewToken({tokenID: req.params.tokenID});
+      if (token) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.OK)
+          .json({ message: constants.RESPONSE_STATUS.SUCCESS, data: token });
+      } else {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.NOT_FOUND)
+          .json({ message: constants.RESPONSE_STATUS.NOT_FOUND });
+      }
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+    }
+  }
+);
 
 /**
  *  Gets single collection detail by tokenID

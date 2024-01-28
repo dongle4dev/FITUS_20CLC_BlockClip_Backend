@@ -18,7 +18,7 @@ class TokenService {
   async getTokens({limit, offset, orderBy, title, creator, owner, tokenID}) {
     try {
       let where = {
-        active: true,
+        disabled: false,
         tokenID: {
           contains: tokenID
         },
@@ -137,7 +137,7 @@ class TokenService {
   async getTokensByUser({limit, offset, orderBy, title, wallet, tokenID}) {
     try {
       let where = {
-        active: true,
+        disabled: false,
         tokenID: {
           contains: tokenID
         },
@@ -181,7 +181,7 @@ class TokenService {
   async getFavoritedTokensByUser({limit, offset, orderBy, title, userWallet}) {
     try {
       let where = {
-        active: true,
+        disabled: false,
         OR:[
           {title: {
             contains: title,
@@ -376,6 +376,35 @@ class TokenService {
         return { isFavorited: true };
       }
       else return { isFavorited: false };
+    } catch (err) {
+      console.log(err);
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async viewToken(params) {
+    try {
+      let { tokenID } = params;
+      let tokens = await prisma.tokens.findMany({
+        where: { 
+          tokenID: tokenID
+        },
+      });
+
+      if (tokens.length > 0) {
+        tokens = tokens.at(0);
+        
+        let token = await prisma.tokens.update({
+          where: {
+            tokenID: tokenID
+          },
+          data: {
+            totalViews: tokens.totalViews + 1
+          }
+        })
+        return token;
+      }
+      else return tokens;
     } catch (err) {
       console.log(err);
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);

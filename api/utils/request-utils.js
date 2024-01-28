@@ -56,7 +56,8 @@ const config = require("../../config/config");
     } else {
       orderBy[sort] = SORT_DIRECTION.DESC;
     }
-  
+    
+    console.log(orderBy)
     return orderBy;
   }
   
