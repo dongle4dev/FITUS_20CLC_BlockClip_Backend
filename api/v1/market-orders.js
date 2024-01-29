@@ -38,7 +38,7 @@ router.post(
       }
 
       let {
-        tokenID, chainID, tokenAddress, paymentType, seller, status, price
+        tokenID, chainID, tokenAddress, paymentType, seller, status, price, event
       } = req.body;
 
       let validOrder = await marketOrderServiceInstance.checkValidOrder({
@@ -53,7 +53,7 @@ router.post(
       }
 
       let order = await marketOrderServiceInstance.placeFixedOrder({
-        tokenID, chainID, tokenAddress, paymentType, seller, status, price
+        tokenID, chainID, tokenAddress, paymentType, seller, status, price, event
       });
 
       if (order) {

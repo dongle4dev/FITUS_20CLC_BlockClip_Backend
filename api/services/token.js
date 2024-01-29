@@ -1,5 +1,5 @@
 // const { Client } = require("pg");
-import { contractAddress } from './../../../nft-marketplace/pages/api/utils';
+// import { contractAddress } from './../../../nft-marketplace/pages/api/utils';
 let constants = require("../../config/constants");
 const helper = require("../utils/helper");
 const prisma = require("../../prisma");
