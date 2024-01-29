@@ -274,7 +274,7 @@ router.post(
  *  Like the token
  */
 
-router.put(
+router.patch(
   "/:tokenID/like",
   [check("tokenID", "A valid tokenID is required").exists()],
   verifyToken,
@@ -364,7 +364,7 @@ router.get(
  *  Add the token to favorite list
  */
 
-router.put(
+router.patch(
   "/:tokenID/favorite",
   [check("tokenID", "A valid tokenID is required").exists()],
   verifyToken,
@@ -453,7 +453,7 @@ router.get(
  *  View the token
  */
 
-router.put(
+router.patch(
   "/:tokenID/view",
   [check("tokenID", "A valid tokenID is required").exists()],
   async (req, res) => {
