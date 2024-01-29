@@ -12,7 +12,7 @@ const helper = require("../utils/helper");
 class MarketOrderService {
   async placeFixedOrder(params) {
     try {
-      let { tokenID, chainID, tokenAddress, paymentType, seller, status, price} = params;
+      let { tokenID, chainID, tokenAddress, paymentType, seller, status, price, event} = params;
       let order = await prisma.marketorders.create({
         data: {
           sellerWallet: { connect: { wallet: seller} },
@@ -21,7 +21,8 @@ class MarketOrderService {
           tokenAddress: tokenAddress,
           paymentType: paymentType,
           status: status,
-          price: price
+          price: price,
+          event: event
         },
       });
       return order;

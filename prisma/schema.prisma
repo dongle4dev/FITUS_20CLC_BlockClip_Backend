@@ -70,6 +70,7 @@ model marketorders {
   buyer               String?          
   seller              String  
   paymentType         String
+  event               Int
   status              Int          
   price               Float
   createdAt           DateTime        @default(now())
