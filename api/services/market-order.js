@@ -245,7 +245,6 @@ class MarketOrderService {
       let order = await prisma.marketorders.findMany({
         where: {
           tokenID: tokenID,
-          seller: seller,
           status: 1,
         },
       });

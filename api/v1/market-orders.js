@@ -26,7 +26,7 @@ router.post(
     check("seller", "A seller id is required").exists(),
     check("tokenID", "A token id is required").exists(),
   ],
-  // verifyToken,
+  verifyToken,
   async (req, res) => {
     try {
       const errors = validationResult(req);
@@ -91,7 +91,7 @@ router.post(
 router.get(
   "/:tokenID/isListed",
   check("tokenID", "A seller id is required").exists(),
-  verifyToken,
+  // verifyToken,
   async (req, res) => {
     try {
       const errors = validationResult(req);
@@ -103,10 +103,8 @@ router.get(
       }
 
       let tokenID = req.params.tokenID;
-      let userWallet = req.userWallet;
 
       let validOrder = await marketOrderServiceInstance.checkValidOrder({
-        seller: userWallet,
         tokenID,
       });
 
