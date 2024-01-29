@@ -1,4 +1,5 @@
 // const { Client } = require("pg");
+import { contractAddress } from './../../../nft-marketplace/pages/api/utils';
 let constants = require("../../config/constants");
 const helper = require("../utils/helper");
 const prisma = require("../../prisma");
@@ -219,10 +220,10 @@ class TokenService {
       let current = await this.getTokenByID(params);
       let { description: params_description, source: params_source, 
             title: params_title, active: params_active, disabled: params_disabled,
-            tokenID: params_tokenID } = params;
+            tokenID: params_tokenID, contractAddress: params_contractAddress} = params;
       let { description: current_description, source: current_source, 
             title: current_title, active: current_active, disabled: current_disabled,
-            tokenID: current_tokenID } = current;
+            tokenID: current_tokenID, contractAddress: current_contractAddress } = current;
       let token = await prisma.tokens.update({
         where: {
           id: params.id
@@ -243,6 +244,7 @@ class TokenService {
             ? params_title.toLowerCase()
             : current_title.toLowerCase(),
           tokenID: params_tokenID? params_tokenID : current_tokenID,
+          contractAddress: params_contractAddress? params_contractAddress : current_contractAddress,
         },
       });
 
