@@ -149,7 +149,8 @@ class CollectionService {
             {title_lowercase: {
               contains: title,
             }},
-          ]
+          ],
+          active: true
         },
       });
 
@@ -204,13 +205,27 @@ class CollectionService {
           title: params_title ? params_title : current_title,
           title_lowercase: params_title ? params_title.toLowerCase(): current_title.toLowerCase(),
           collectionID: params_collectionID ? params_collectionID : current_collectionID,
-          active: params_active ? params_active : current_active,
-          disabled: params_disabled ? params_disabled : current_disabled,
+          active: params_active !== undefined ? params_active : current_active,
+          disabled: params_disabled !== undefined ? params_disabled : current_disabled,
           averagePrice: params_averagePrice ? params_averagePrice : current_averagePrice,
           totalViews: params_totalViews ? params_totalViews : current_totalViews,
         },
       });
-      return collection;
+
+      if (params_description || params_bannerURL || params_title) {
+        let tempCol = {...collection};
+        delete tempCol.id, delete tempCol.active, delete tempCol.disabled;
+        delete tempCol.updatedAt, delete tempCol.createdAt;
+        delete tempCol.averagePrice, delete tempCol.totalViews;
+        delete tempCol.collectionID, delete tempCol.title_lowercase;
+        const res = await pinata.pinJSONToIPFS(tempCol);
+        if (params.collectionURI) {
+          const res2 = await pinata.unpin(params.collectionURI.split('/')[4]);
+          console.log("Unpin collection on Pinata: " + res2);
+        }
+        return {collection, collectionURI: `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}`};
+      } else return collection;
+      
     } catch (err) {
       console.log(err);
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);

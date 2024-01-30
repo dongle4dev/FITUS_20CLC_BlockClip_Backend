@@ -3,6 +3,8 @@ let { hasNextPage } = require("../utils/request-utils");
 let constants = require("../../config/constants");
 let zeroxUtil = require("../utils/zerox-util");
 const helper = require("../utils/helper");
+const tokenService = require("./token");
+let tokenServiceInstance = new tokenService();
 
 /**
  * Includes all the Order services that controls
@@ -310,17 +312,40 @@ class MarketOrderService {
   async updateOrder(params) {
     try {
         let current = await this.getOrderByID(params);
-        let { price: current_price, status: current_status } = current;
-        let { price: params_price, status: params_status } = params;
-  
-        let order = await prisma.marketorders.update({
-          where: { id: params.id },
-          data: {
-            price: params_price ? params_price : current_price,
-            status: params_status ? params_status : current_status,
-          },
-        });
-      return order;
+        let { price: current_price, status: current_status, 
+              buyer: current_buyer } = current;
+        let { price: params_price, status: params_status, 
+              buyer: params_buyer, tokenURI: params_tokenURI } = params;
+        
+        if (parseInt(params_status) === 0) {
+          console.log(params_status)
+          let order = await prisma.marketorders.update({
+            where: { id: params.id },
+            data: {
+              price: params_price ? params_price : current_price,
+              status: params_status,
+              buyerWallet: { connect: { wallet: params_buyer} }
+            },
+          });
+          
+          
+          let token = await tokenServiceInstance.updateTokenByTokenID({
+            tokenID: current.tokenID,
+            owner: params_buyer,
+            tokenURI: params_tokenURI
+          })
+          
+          return { order, token: token.token, tokenURI: token.tokenURI };
+        } else {
+          let order = await prisma.marketorders.update({
+            where: { id: params.id },
+            data: {
+              price: params_price ? params_price : current_price,
+              status: params_status !== undefined ? params_status : current_status,
+            },
+          });
+          return order;
+        }
     } catch (err) {
       console.log(err);
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);

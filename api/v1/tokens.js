@@ -5,8 +5,8 @@ const TokenService = require("../services/token");
 const tokenServiceInstance = new TokenService();
 const userService = require("../services/user");
 let userServiceInstance = new userService();
-const collectionService = require("../services/collection");
-let collectionServiceInstance = new collectionService();
+// const collectionService = require("../services/collection");
+// let collectionServiceInstance = new collectionService();
 let constants = require("../../config/constants");
 const helper = require("../utils/helper");
 const upload = require("../utils/upload");
@@ -33,6 +33,7 @@ router.get("/", async (req, res) => {
     let creator = requestUtil.getKeyword(req.query, "creator");
     let owner = requestUtil.getKeyword(req.query, "owner");
     let collectionID = requestUtil.getKeyword(req.query, "collectionID");
+    let status = requestUtil.getKeyword(req.query, "status");
 
     if (creator !== "") {
       if (!validate.isValidEthereumAddress(creator)) {
@@ -60,7 +61,7 @@ router.get("/", async (req, res) => {
     }
 
     let tokens = await tokenServiceInstance.getTokens({
-      limit, offset, orderBy, title, creator, owner, collectionID
+      limit, offset, orderBy, title, creator, owner, collectionID, status
     });
 
     return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
@@ -84,6 +85,7 @@ router.get("/", async (req, res) => {
 
 router.get(
   "/user/:wallet", 
+  verifyToken,
   [check("wallet", "A valid id is required").exists()],
   async (req, res) => {
   try {
@@ -142,17 +144,26 @@ router.get(
  */
 
 router.get(
-  "/favorite", 
+  "/favorite/:wallet", 
   verifyToken,
+  [check("wallet", "A valid id is required").exists()],
   async (req, res) => {
   try {
-    let userWallet = req.userWallet;
+    const errors = validationResult(req);
 
-    if (!validate.isValidEthereumAddress(userWallet)) {
+    if (!errors.isEmpty()) {
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+        .json({ error: errors.array() });
+    }
+
+    let wallet = req.params.wallet;
+
+    if (!validate.isValidEthereumAddress(wallet)) {
       return res
       .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
       .json({ message: 'wallet is not valid' });
-    }
+  }
   
 
     let limit = requestUtil.getLimit(req.query);
@@ -160,7 +171,7 @@ router.get(
     let orderBy = requestUtil.getSortBy(req.query, "+id");
     let title = requestUtil.getKeyword(req.query, "search");
 
-    let user = await userServiceInstance.getUser({ userWallet });
+    let user = await userServiceInstance.getUser({ wallet });
 
     if (!user) {
       return res.status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST).json({
@@ -169,7 +180,7 @@ router.get(
     }
 
     let tokens = await tokenServiceInstance.getFavoritedTokensByUser({
-      limit, offset, orderBy, title, userWallet
+      limit, offset, orderBy, title, wallet
     });
 
     return res.status(constants.RESPONSE_STATUS_CODES.OK).json({

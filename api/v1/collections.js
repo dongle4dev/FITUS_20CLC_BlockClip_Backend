@@ -7,6 +7,7 @@ const upload = require("../utils/upload");
 const validate = require("../utils/helper");
 let requestUtil = require("../utils/request-utils");
 let constants = require("../../config/constants");
+const verifyToken = require("../middlewares/verify-token");
 
 /**
  * collection routes
@@ -247,6 +248,7 @@ router.get(
 
 router.put(
   "/:id",
+  verifyToken,
   async (req, res) => {
     try {
       let params = { ...req.params, ...req.body };

@@ -389,7 +389,7 @@ class UserService {
       let { wallet } = params;
       let users = await prisma.users.findMany({
         where: {
-          wallet: wallet.toLowerCase(),
+          wallet: wallet,
         },
       });
       return users;
@@ -465,6 +465,29 @@ class UserService {
 //       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
 //     }
 //   }
+  async updateUser(params) {
+    try {
+      let current = await this.getUser(params);
+      let { username: current_username, avatar: current_avatar, cover: current_cover, active: current_active } = current;
+      let { username: params_username, avatar: params_avatar, cover: params_cover, active: params_active } = params;
+
+      let user = await prisma.users.update({
+        where: { wallet: params.userWallet },
+        data: {
+          cover: params_cover
+            ? params_cover
+            : current_cover,
+          active: params_active ? params_active : current_active,
+          avatar: params_avatar ? params_avatar : current_avatar,
+          username: params_username ? params_username : current_username,
+        },
+      });
+      return user;
+    } catch (err) {
+      console.log(err);
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
 }
 
 module.exports = UserService;
