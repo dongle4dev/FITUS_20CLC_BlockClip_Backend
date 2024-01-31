@@ -149,7 +149,6 @@ router.get("/details", verifyToken, async (req, res) => {
 
 router.get(
   "/:wallet", 
-  verifyToken,
   [check("wallet", "A valid id is required").exists()],
   async (req, res) => {
   try {
