@@ -13,11 +13,38 @@ const path = require("path");
 
 class TokenService {
 
-  async getTokens({limit, offset, orderBy, title, creator, owner, collectionID, status}) {
+  async getTokens({limit, offset, orderBy, title, creator, owner, collectionID, status, active}) {
     try {
       let where;
 
-      if (status !== "") {
+      if (status !== "" && active !== "") {
+        where = {
+          disabled: false,
+          collectionID: {
+            contains: collectionID
+          },
+          OR:[
+            {title: {
+              contains: title,
+            }},
+            {title_lowercase: {
+              contains: title,
+            }},
+          ],
+          creator: {
+            contains: creator
+          },
+          owner: {
+            contains: owner
+          },
+          marketorders: {
+            some: {
+              status: parseInt(status)
+            }
+          },
+          active: active == 'true'
+        };
+      } else if (status !== "") {
         where = {
           disabled: false,
           collectionID: {
@@ -43,6 +70,28 @@ class TokenService {
             }
           }
         };
+      } else if (active !== "") {
+        where = {
+          disabled: false,
+          collectionID: {
+            contains: collectionID
+          },
+          OR:[
+            {title: {
+              contains: title,
+            }},
+            {title_lowercase: {
+              contains: title,
+            }},
+          ],
+          creator: {
+            contains: creator
+          },
+          owner: {
+            contains: owner
+          },
+          active: active == 'true'
+        };
       } else {
         where = {
           disabled: false,
@@ -62,15 +111,15 @@ class TokenService {
           },
           owner: {
             contains: owner
-          }
+          },
         };
       }
       
       let count = 0;
-      if (creator !== "" || owner !== "" || collectionID !== "" || title !== "" || status !== "") {
+      if (creator !== "" || owner !== "" || collectionID !== "" || title !== "" || status !== "" || active !== "") {
         count = await prisma.tokens.count({ where });
       } else {
-        count = await prisma.tokens.count({ where: {active: true} });
+        count = await prisma.tokens.count({ where: {disabled: false} });
       }
       let tokens = await prisma.tokens.findMany({
         where,

@@ -113,6 +113,63 @@ router.post(
  *  Gets all the collection details
  */
 
+router.get("/user/:wallet",
+  verifyToken,
+  async (req, res) => {
+  try {
+    let limit = requestUtil.getLimit(req.query);
+    let offset = requestUtil.getOffset(req.query);
+    let orderBy = requestUtil.getSortBy(req.query, "+id");
+    let chainID = requestUtil.getChainID(req.query);
+    let title = requestUtil.getKeyword(req.query, "search");
+    let creator = req.params.wallet;
+    let category = requestUtil.getKeyword(req.query, "category");
+    let active = requestUtil.getKeyword(req.query, "active");
+
+    if (creator !== "") {
+      if (!validate.isValidEthereumAddress(creator)) {
+        return res
+        .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+        .json({ message: 'creator address is not valid' });
+      }
+    }
+
+    let collections = await collectionServiceInstance.getCollections({
+      limit,
+      offset,
+      orderBy,
+      chainID,
+      title,
+      creator,
+      category,
+      active
+    });
+    if (collections) {
+      return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
+        message: constants.RESPONSE_STATUS.SUCCESS,
+        data: {
+          collections: collections.collections,
+          count: collections.count
+        }
+      });
+    } else {
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+        .json({ message: constants.RESPONSE_STATUS.FAILURE });
+    }
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+  }
+});
+
+
+/**
+ *  Gets all the collection details
+ */
+
 router.get("/", async (req, res) => {
   try {
     let limit = requestUtil.getLimit(req.query);

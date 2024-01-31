@@ -34,6 +34,7 @@ router.get("/", async (req, res) => {
     let owner = requestUtil.getKeyword(req.query, "owner");
     let collectionID = requestUtil.getKeyword(req.query, "collectionID");
     let status = requestUtil.getKeyword(req.query, "status");
+    let active = requestUtil.getKeyword(req.query, "active");
 
     if (creator !== "") {
       if (!validate.isValidEthereumAddress(creator)) {
@@ -61,7 +62,7 @@ router.get("/", async (req, res) => {
     }
 
     let tokens = await tokenServiceInstance.getTokens({
-      limit, offset, orderBy, title, creator, owner, collectionID, status
+      limit, offset, orderBy, title, creator, owner, collectionID, status, active
     });
 
     return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
