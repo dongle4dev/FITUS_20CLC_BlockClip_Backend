@@ -39,32 +39,54 @@ class CollectionService {
     }
   }
 
-  async getCollections({ limit, offset, orderBy, chainID, title, creator, category }) {
+  async getCollections({ limit, offset, orderBy, chainID, title, creator, category, active }) {
     try {
-      let where = {
-        active: true,
-        chainID: chainID,
-        OR:[
-          {title: {
-            contains: title,
-          }},
-          {title_lowercase: {
-            contains: title,
-          }},
-        ],
-        creator: {
-          contains: creator
-        },
-        category: {
-          contains: category
-        }
-      };
-
+      let where;
       let count = 0;
-      if (creator !== "" || category !== "") {
+      if (creator !== "" || category !== "" || active !== "") {
+        if (active !== "") {
+          where = {
+            disabled: false,
+            chainID: chainID,
+            OR:[
+              {title: {
+                contains: title,
+              }},
+              {title_lowercase: {
+                contains: title,
+              }},
+            ],
+            creator: {
+              contains: creator
+            },
+            category: {
+              contains: category
+            },
+            active: active == 'true'
+        };
+        } else {
+          where = {
+            disabled: false,
+            chainID: chainID,
+            OR:[
+              {title: {
+                contains: title,
+              }},
+              {title_lowercase: {
+                contains: title,
+              }},
+            ],
+            creator: {
+              contains: creator
+            },
+            category: {
+              contains: category
+            }
+          };
+        }
         count = await prisma.collections.count({ where });
       } else {
-        count = await prisma.collections.count({ where: {active: true, chainID: chainID} });
+        count = await prisma.collections.count({ where: {disabled: false, chainID: chainID} });
       }
       let collections = await prisma.collections.findMany({
         where,

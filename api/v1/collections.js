@@ -122,6 +122,7 @@ router.get("/", async (req, res) => {
     let title = requestUtil.getKeyword(req.query, "search");
     let creator = requestUtil.getKeyword(req.query, "creator");
     let category = requestUtil.getKeyword(req.query, "category");
+    let active = requestUtil.getKeyword(req.query, "active");
 
     if (creator !== "") {
       if (!validate.isValidEthereumAddress(creator)) {
@@ -138,7 +139,8 @@ router.get("/", async (req, res) => {
       chainID,
       title,
       creator,
-      category
+      category,
+      active
     });
     if (collections) {
       /**

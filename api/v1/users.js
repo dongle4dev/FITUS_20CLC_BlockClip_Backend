@@ -147,47 +147,48 @@ router.get("/details", verifyToken, async (req, res) => {
  *  Gets the user details by wallet
  */
 
-// router.get(
-//   "/:wallet", 
-//   [check("wallet", "A valid id is required").exists()],
-//   async (req, res) => {
-//   try {
-//     const errors = validationResult(req);
+router.get(
+  "/:wallet", 
+  verifyToken,
+  [check("wallet", "A valid id is required").exists()],
+  async (req, res) => {
+  try {
+    const errors = validationResult(req);
 
-//     if (!errors.isEmpty()) {
-//       return res
-//         .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
-//         .json({ error: errors.array() });
-//     }
+    if (!errors.isEmpty()) {
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+        .json({ error: errors.array() });
+    }
 
-//     let wallet = req.params.wallet;
+    let wallet = req.params.wallet;
 
-//     if (!validate.isValidEthereumAddress(wallet)) {
-//       return res
-//       .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
-//       .json({ message: 'wallet is not valid' });
-//   }
+    if (!validate.isValidEthereumAddress(wallet)) {
+      return res
+      .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+      .json({ message: 'wallet is not valid' });
+  }
 
-//     let users = await userServiceInstance.getUser({ userWallet: wallet });
+    let users = await userServiceInstance.getUser({ userWallet: wallet });
 
-//     if (users) {
-//       return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
-//         message: constants.RESPONSE_STATUS.SUCCESS,
-//         data: users
-//       });
-//     } else {
-//       return res
-//         .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
-//         .json({ message: constants.RESPONSE_STATUS.FAILURE });
-//     }
+    if (users) {
+      return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
+        message: constants.RESPONSE_STATUS.SUCCESS,
+        data: users
+      });
+    } else {
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+        .json({ message: constants.RESPONSE_STATUS.FAILURE });
+    }
     
-//   } catch (err) {
-//     console.log(err);
-//     return res
-//       .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
-//       .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
-//   }
-// });
+  } catch (err) {
+    console.log(err);
+    return res
+      .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+      .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+  }
+});
 
 
 /**
