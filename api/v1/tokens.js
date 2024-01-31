@@ -145,20 +145,11 @@ router.get(
  */
 
 router.get(
-  "/favorite/:wallet", 
+  "/favorite", 
   verifyToken,
-  [check("wallet", "A valid id is required").exists()],
   async (req, res) => {
   try {
-    const errors = validationResult(req);
-
-    if (!errors.isEmpty()) {
-      return res
-        .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
-        .json({ error: errors.array() });
-    }
-
-    let wallet = req.params.wallet;
+    let wallet = req.userWallet;
 
     if (!validate.isValidEthereumAddress(wallet)) {
       return res
