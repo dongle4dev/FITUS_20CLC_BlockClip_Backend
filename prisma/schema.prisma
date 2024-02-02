@@ -17,13 +17,18 @@ model users {
   updatedAt     DateTime        @updatedAt
   active        Boolean?        @default(true)
   seller_marketorders  marketorders[]   @relation("seller_marketorders")
-  buyer_marketorders  marketorders[]     @relation("buyer_marketorders")
+  buyer_marketorders   marketorders[]     @relation("buyer_marketorders")
+  from_friends  friends[]       @relation("from_friends")
+  to_friends    friends[]       @relation("to_friends")
+  collections   collections[]
+  creator_tokens tokens[]       @relation("creator_tokens")
+  owner_tokens   tokens[]       @relation("owner_tokens")
 }
 
 model collections {
   id                  String          @id @default(auto()) @map("_id") @db.ObjectId
   collectionID        String?         @unique
-  creator             String          @unique
+  creatorCollection   String          
   chainID             String
   title               String
   title_lowercase     String      
@@ -38,6 +43,8 @@ model collections {
   disabled            Boolean?        @default(false)
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
+  creator             users           @relation(fields: [creatorCollection], references: [wallet])
+  tokens              tokens[]
 }
 
 model tokens {
@@ -60,6 +67,9 @@ model tokens {
   listOfFavoriteUsers    String[]    
   totalViews          Int             @default(0)
   marketorders        marketorders[]
+  creatorWallet       users         @relation("creator_tokens", fields: [creator], references: [wallet])
+  ownerWallet         users         @relation("owner_tokens", fields: [owner], references: [wallet])
+  collection          collections   @relation(fields: [collectionID], references: [collectionID])
 }
 
 model marketorders {
@@ -75,7 +85,19 @@ model marketorders {
   price               Float
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
-  buyerWallet         users?           @relation("buyer_marketorders", fields: [buyer], references: [wallet])
+  buyerWallet         users?          @relation("buyer_marketorders", fields: [buyer], references: [wallet])
   sellerWallet        users           @relation("seller_marketorders", fields: [seller], references: [wallet])
   tokens              tokens          @relation(fields: [tokenID], references: [tokenID])
+}
+
+model friends {
+  id                  String          @id @default(auto()) @map("_id") @db.ObjectId
+  chainID             String
+  from                String          
+  to                  String  
+  status              Int         
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  requester           users           @relation("from_friends", fields: [from], references: [wallet])
+  recipient           users           @relation("to_friends", fields: [to], references: [wallet])
 }

@@ -300,6 +300,51 @@ router.get(
   }
 );
 
+/**
+ *  View collection by collection ID
+ */
+
+router.patch(
+  "/:collectionID/view",
+  async (req, res) => {
+    try {
+      let params = { ...req.params };
+
+      if (!params.collectionID) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: constants.MESSAGES.INPUT_VALIDATION_ERROR });
+      }
+
+      let collectionExists = await collectionServiceInstance.getCollectionByCollectionID(params);
+
+      if (collectionExists.length === 0) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: "collection doesnt exists" });
+      }
+
+      let collection = await collectionServiceInstance.viewCollection(
+        params
+      );
+      if (collection) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.OK)
+          .json({ message: constants.RESPONSE_STATUS.SUCCESS, data: collection });
+      } else {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: constants.RESPONSE_STATUS.FAILURE });
+      }
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+    }
+  }
+);
+
 
 /**
  *  Updates an existing collection of NFT token by id

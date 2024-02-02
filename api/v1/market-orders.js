@@ -103,9 +103,11 @@ router.get(
       }
 
       let tokenID = req.params.tokenID;
+      let status = requestUtil.getKeyword(req.query, "status");
 
       let validOrder = await marketOrderServiceInstance.checkValidOrder({
         tokenID,
+        status
       });
 
       if (validOrder.active_order) {
@@ -199,9 +201,12 @@ router.get(
       let offset = requestUtil.getOffset(req.query);
       let orderBy = requestUtil.getSortBy(req.query, "+id");
       let tokenID = requestUtil.getKeyword(req.query, "tokenID");
+      let status = requestUtil.getKeyword(req.query, "status");
+      
 
       let orders = await marketOrderServiceInstance.getOrders({
         tokenID,
+        status,
         limit,
         offset,
         orderBy,

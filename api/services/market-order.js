@@ -95,12 +95,15 @@ class MarketOrderService {
 //     }
 //   }
 
-  async getOrders({ tokenID, limit, offset, orderBy }) {
+  async getOrders({ tokenID, status, limit, offset, orderBy }) {
     try {
         let where = {
             tokenID: {
                 contains: tokenID
             },
+            status: status? parseInt(status) : {
+              not: 5
+            }
           };
 
       let count = await prisma.marketorders.count({ where });
@@ -243,11 +246,14 @@ class MarketOrderService {
 
   async checkValidOrder(params) {
     try {
-      let { tokenID, seller } = params;
+      let { tokenID, seller, status } = params;
       let order = await prisma.marketorders.findMany({
         where: {
           tokenID: tokenID,
-          status: 1,
+          status: status ? parseInt(status) : 1,
+          seller: seller ? seller : {
+            contains: ""
+          },
         },
       });
 

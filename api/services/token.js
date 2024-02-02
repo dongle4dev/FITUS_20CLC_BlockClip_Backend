@@ -13,7 +13,7 @@ const path = require("path");
 
 class TokenService {
 
-  async getTokens({limit, offset, orderBy, title, creator, owner, collectionID, status, active}) {
+  async getTokens({ limit, offset, orderBy, title, creator, owner, collectionID, status, active }) {
     try {
       let where;
 
@@ -23,13 +23,17 @@ class TokenService {
           collectionID: {
             contains: collectionID
           },
-          OR:[
-            {title: {
-              contains: title,
-            }},
-            {title_lowercase: {
-              contains: title,
-            }},
+          OR: [
+            {
+              title: {
+                contains: title,
+              }
+            },
+            {
+              title_lowercase: {
+                contains: title,
+              }
+            },
           ],
           creator: {
             contains: creator
@@ -50,13 +54,17 @@ class TokenService {
           collectionID: {
             contains: collectionID
           },
-          OR:[
-            {title: {
-              contains: title,
-            }},
-            {title_lowercase: {
-              contains: title,
-            }},
+          OR: [
+            {
+              title: {
+                contains: title,
+              }
+            },
+            {
+              title_lowercase: {
+                contains: title,
+              }
+            },
           ],
           creator: {
             contains: creator
@@ -76,13 +84,17 @@ class TokenService {
           collectionID: {
             contains: collectionID
           },
-          OR:[
-            {title: {
-              contains: title,
-            }},
-            {title_lowercase: {
-              contains: title,
-            }},
+          OR: [
+            {
+              title: {
+                contains: title,
+              }
+            },
+            {
+              title_lowercase: {
+                contains: title,
+              }
+            },
           ],
           creator: {
             contains: creator
@@ -98,13 +110,17 @@ class TokenService {
           collectionID: {
             contains: collectionID
           },
-          OR:[
-            {title: {
-              contains: title,
-            }},
-            {title_lowercase: {
-              contains: title,
-            }},
+          OR: [
+            {
+              title: {
+                contains: title,
+              }
+            },
+            {
+              title_lowercase: {
+                contains: title,
+              }
+            },
           ],
           creator: {
             contains: creator
@@ -114,19 +130,19 @@ class TokenService {
           },
         };
       }
-      
+
       let count = 0;
       if (creator !== "" || owner !== "" || collectionID !== "" || title !== "" || status !== "" || active !== "") {
         count = await prisma.tokens.count({ where });
       } else {
-        count = await prisma.tokens.count({ where: {disabled: false} });
+        count = await prisma.tokens.count({ where: { disabled: false } });
       }
       let tokens = await prisma.tokens.findMany({
         where,
         orderBy,
         take: limit,
         skip: offset
-      }); 
+      });
       return {
         tokens,
         count,
@@ -144,25 +160,25 @@ class TokenService {
       let { creator, owner, title, description, source, collectionID, chainID, contractAddress } = params;
       let token = await prisma.tokens.create({
         data: {
-          creator: creator,
-          owner: owner,
+          creatorWallet: { connect: { wallet: creator } },
+          ownerWallet: { connect: { wallet: owner } },
           title: title,
           title_lowercase: title.toLowerCase(),
           description: description,
           source: source,
-          collectionID: collectionID? collectionID : null,
-          chainID: chainID? chainID : null,
+          collection: collectionID ? { connect: { collectionID: collectionID } } : null,
+          chainID: chainID ? chainID : null,
           contractAddress: contractAddress,
         },
       });
-      let tempToken = {...token};
-      delete tempToken.id, tempToken.tokenID, 
-      delete tempToken.active, delete tempToken.disabled, 
-      delete tempToken.updatedAt, delete tempToken.createdAt;
+      let tempToken = { ...token };
+      delete tempToken.id, tempToken.tokenID,
+        delete tempToken.active, delete tempToken.disabled,
+        delete tempToken.updatedAt, delete tempToken.createdAt;
       delete tempToken.listOfLikedUsers, delete tempToken.listOfFavoriteUsers;
       const res = await pinata.pinJSONToIPFS(tempToken);
 
-      return {token, tokenURI: `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}`};
+      return { token, tokenURI: `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}` };
     } catch (err) {
       console.log(err);
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
@@ -211,28 +227,36 @@ class TokenService {
     }
   }
 
-  async getTokensByUser({limit, offset, orderBy, title, wallet, tokenID}) {
+  async getTokensByUser({ limit, offset, orderBy, title, wallet, tokenID }) {
     try {
       let where = {
         disabled: false,
         tokenID: {
           contains: tokenID
         },
-        OR:[
-          {title: {
-            contains: title,
-          }},
-          {title_lowercase: {
-            contains: title,
-          }},
+        OR: [
+          {
+            title: {
+              contains: title,
+            }
+          },
+          {
+            title_lowercase: {
+              contains: title,
+            }
+          },
         ],
-        OR:[
-          {creator: {
-            contains: wallet,
-          }},
-          {owner: {
-            contains: wallet,
-          }},
+        OR: [
+          {
+            creator: {
+              contains: wallet,
+            }
+          },
+          {
+            owner: {
+              contains: wallet,
+            }
+          },
         ],
       };
 
@@ -242,7 +266,7 @@ class TokenService {
         orderBy,
         take: limit,
         skip: offset
-      }); 
+      });
       return {
         tokens,
         count,
@@ -255,19 +279,23 @@ class TokenService {
     }
   }
 
-  async getFavoritedTokensByUser({limit, offset, orderBy, title, wallet}) {
+  async getFavoritedTokensByUser({ limit, offset, orderBy, title, wallet }) {
     try {
       let where = {
         disabled: false,
-        OR:[
-          {title: {
-            contains: title,
-          }},
-          {title_lowercase: {
-            contains: title,
-          }},
+        OR: [
+          {
+            title: {
+              contains: title,
+            }
+          },
+          {
+            title_lowercase: {
+              contains: title,
+            }
+          },
         ],
-        listOfFavoriteUsers: { 
+        listOfFavoriteUsers: {
           hasSome: [wallet]
         }
       };
@@ -278,7 +306,7 @@ class TokenService {
         orderBy,
         take: limit,
         skip: offset
-      }); 
+      });
       return {
         tokens,
         count,
@@ -294,16 +322,16 @@ class TokenService {
   async updateToken(params) {
     try {
       let current = await this.getTokenByID(params);
-      let { description: params_description, source: params_source, 
-            title: params_title, active: params_active, disabled: params_disabled,
-            tokenID: params_tokenID, contractAddress: params_contractAddress,
-            owner: params_owner,
-          } = params;
-      let { description: current_description, source: current_source, 
-            title: current_title, active: current_active, disabled: current_disabled,
-            tokenID: current_tokenID, contractAddress: current_contractAddress,
-            owner: current_owner
-          } = current;
+      let { description: params_description, source: params_source,
+        title: params_title, active: params_active, disabled: params_disabled,
+        tokenID: params_tokenID, contractAddress: params_contractAddress,
+        owner: params_owner,
+      } = params;
+      let { description: current_description, source: current_source,
+        title: current_title, active: current_active, disabled: current_disabled,
+        tokenID: current_tokenID, contractAddress: current_contractAddress,
+        owner: current_owner
+      } = current;
       let token = await prisma.tokens.update({
         where: {
           id: params.id
@@ -320,18 +348,22 @@ class TokenService {
             ? params_active
             : current_active,
           disabled: params_disabled !== undefined ? params_disabled : current_disabled,
-          title_lowercase: params_title 
+          title_lowercase: params_title
             ? params_title.toLowerCase()
             : current_title.toLowerCase(),
-          tokenID: params_tokenID? params_tokenID : current_tokenID,
-          contractAddress: params_contractAddress? params_contractAddress : current_contractAddress,
-          owner: params_owner? params_owner : current_owner,
+          tokenID: params_tokenID ? params_tokenID : current_tokenID,
+          contractAddress: params_contractAddress ? params_contractAddress : current_contractAddress,
+          ownerWallet: params_owner ? {
+            connect: { wallet: params_owner }
+          } : {
+            connect: { wallet: current_owner }
+          },
         },
       });
 
-      if (params_description || params_title || 
-          params_source || params_contractAddress || params_owner) {
-        let tempToken = {...token};
+      if (params_description || params_title ||
+        params_source || params_contractAddress || params_owner) {
+        let tempToken = { ...token };
         delete tempToken.id, delete tempToken.active, delete tempToken.disabled;
         delete tempToken.updatedAt, delete tempToken.createdAt;
         delete tempToken.title_lowercase, delete tempToken.tokenID;
@@ -343,9 +375,9 @@ class TokenService {
           console.log("Unpin token on Pinata: " + res2);
         }
 
-        return {token, tokenURI: `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}`};
+        return { token, tokenURI: `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}` };
       } else return token;
-      
+
     } catch (err) {
       console.log(err);
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
@@ -355,16 +387,16 @@ class TokenService {
   async updateTokenByTokenID(params) {
     try {
       let current = await this.getTokenByTokenID(params);
-      let { description: params_description, source: params_source, 
-            title: params_title, active: params_active, disabled: params_disabled,
-            tokenID: params_tokenID, contractAddress: params_contractAddress,
-            owner: params_owner,
-          } = params;
-      let { description: current_description, source: current_source, 
-            title: current_title, active: current_active, disabled: current_disabled,
-            tokenID: current_tokenID, contractAddress: current_contractAddress,
-            owner: current_owner
-          } = current;
+      let { description: params_description, source: params_source,
+        title: params_title, active: params_active, disabled: params_disabled,
+        tokenID: params_tokenID, contractAddress: params_contractAddress,
+        owner: params_owner,
+      } = params;
+      let { description: current_description, source: current_source,
+        title: current_title, active: current_active, disabled: current_disabled,
+        tokenID: current_tokenID, contractAddress: current_contractAddress,
+        owner: current_owner
+      } = current;
       let token = await prisma.tokens.update({
         where: {
           id: current.id
@@ -381,18 +413,22 @@ class TokenService {
             ? params_active
             : current_active,
           disabled: params_disabled !== undefined ? params_disabled : current_disabled,
-          title_lowercase: params_title 
+          title_lowercase: params_title
             ? params_title.toLowerCase()
             : current_title.toLowerCase(),
-          tokenID: params_tokenID? params_tokenID : current_tokenID,
-          contractAddress: params_contractAddress? params_contractAddress : current_contractAddress,
-          owner: params_owner? params_owner : current_owner,
+          tokenID: params_tokenID ? params_tokenID : current_tokenID,
+          contractAddress: params_contractAddress ? params_contractAddress : current_contractAddress,
+          ownerWallet: params_owner ? {
+            connect: { wallet: params_owner }
+          } : {
+            connect: { wallet: current_wallet }
+          },
         },
       });
 
-      if (params_description || params_title || 
-          params_source || params_contractAddress || params_owner) {
-        let tempToken = {...token};
+      if (params_description || params_title ||
+        params_source || params_contractAddress || params_owner) {
+        let tempToken = { ...token };
         delete tempToken.id, delete tempToken.active, delete tempToken.disabled;
         delete tempToken.updatedAt, delete tempToken.createdAt;
         delete tempToken.title_lowercase, delete tempToken.tokenID;
@@ -404,9 +440,9 @@ class TokenService {
           console.log("Unpin token on Pinata: " + res2);
         }
 
-        return {token, tokenURI: `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}`};
+        return { token, tokenURI: `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}` };
       } else return token;
-      
+
     } catch (err) {
       console.log(err);
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
@@ -418,9 +454,9 @@ class TokenService {
       const stream = fs.createReadStream(path.resolve(source));
       const indexForNaming = stream.path.lastIndexOf("/")
       const options = {
-          pinataMetadata: {
-              name: stream.path.slice(indexForNaming + 1),
-          },
+        pinataMetadata: {
+          name: stream.path.slice(indexForNaming + 1),
+        },
       }
 
       const res = await pinata.pinFileToIPFS(stream, options);
@@ -436,7 +472,7 @@ class TokenService {
     try {
       let { tokenID, userWallet } = params;
       let tokens = await prisma.tokens.findMany({
-        where: { 
+        where: {
           tokenID: tokenID
         },
       });
@@ -469,9 +505,9 @@ class TokenService {
     try {
       let { tokenID, userWallet } = params;
       let tokens = await prisma.tokens.findMany({
-        where: { 
+        where: {
           tokenID: tokenID,
-          listOfLikedUsers: { 
+          listOfLikedUsers: {
             hasSome: [userWallet]
           }
         },
@@ -491,7 +527,7 @@ class TokenService {
     try {
       let { tokenID, userWallet } = params;
       let tokens = await prisma.tokens.findMany({
-        where: { 
+        where: {
           tokenID: tokenID
         },
       });
@@ -524,9 +560,9 @@ class TokenService {
     try {
       let { tokenID, userWallet } = params;
       let tokens = await prisma.tokens.findMany({
-        where: { 
+        where: {
           tokenID: tokenID,
-          listOfFavoriteUsers: { 
+          listOfFavoriteUsers: {
             hasSome: [userWallet]
           }
         },
@@ -546,14 +582,14 @@ class TokenService {
     try {
       let { tokenID } = params;
       let tokens = await prisma.tokens.findMany({
-        where: { 
+        where: {
           tokenID: tokenID
         },
       });
 
       if (tokens.length > 0) {
         tokens = tokens.at(0);
-        
+
         let token = await prisma.tokens.update({
           where: {
             tokenID: tokenID

@@ -18,7 +18,7 @@ class CollectionService {
         data: {
           title: title,
           description: description,
-          creator: creator,
+          creator: {connect: {wallet: creator}},
           chainID: chainID,
           contractAddress: contractAddress,
           paymentType: paymentType,
@@ -56,7 +56,7 @@ class CollectionService {
                 contains: title,
               }},
             ],
-            creator: {
+            creatorCollection: {
               contains: creator
             },
             category: {
@@ -76,7 +76,7 @@ class CollectionService {
                 contains: title,
               }},
             ],
-            creator: {
+            creatorCollection: {
               contains: creator
             },
             category: {
@@ -124,7 +124,7 @@ class CollectionService {
                 contains: title,
               }},
             ],
-            creator: {
+            creatorCollection: {
               contains: creator
             },
             category: {
@@ -144,7 +144,7 @@ class CollectionService {
                 contains: title,
               }},
             ],
-            creator: {
+            creatorCollection: {
               contains: creator
             },
             category: {
@@ -276,6 +276,35 @@ class CollectionService {
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
     }
   }
+
+  async viewCollection(params) {
+    try {
+      let { collectionID } = params;
+      let collections = await prisma.collections.findMany({
+        where: { 
+          collectionID: collectionID
+        },
+      });
+
+      if (collections.length > 0) {
+        collections = collections.at(0);
+        let collection = await prisma.collections.update({
+          where: {
+            collectionID: collectionID
+          },
+          data: {
+            totalViews: collections.totalViews + 1
+          }
+        })
+        return collection;
+      }
+      else return collections;
+    } catch (err) {
+      console.log(err);
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
 
   async updateCollection(params) {
     try {
