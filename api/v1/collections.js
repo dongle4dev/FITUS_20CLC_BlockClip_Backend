@@ -365,7 +365,53 @@ router.put(
 
       let collectionExists = await collectionServiceInstance.getCollectionByID(params);
 
-      if (collectionExists.length === 0) {
+      if (!collectionExists) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: "collection doesnt exists" });
+      }
+
+      let collection = await collectionServiceInstance.updateCollection(
+        params
+      );
+      if (collection) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.OK)
+          .json({ message: "collection updated successfully", data: collection });
+      } else {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: "collection update failed" });
+      }
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+    }
+  }
+);
+
+/**
+ *  Updates an existing collection of NFT token by id
+ */
+
+router.put(
+  "/collectionID/:collectionID",
+  verifyToken,
+  async (req, res) => {
+    try {
+      let params = { ...req.params, ...req.body };
+
+      if (!params.collectionID) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: constants.MESSAGES.INPUT_VALIDATION_ERROR });
+      }
+
+      let collectionExists = await collectionServiceInstance.getCollectionByCollectionID(params);
+
+      if (!collectionExists) {
         return res
           .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
           .json({ message: "collection doesnt exists" });

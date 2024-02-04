@@ -157,6 +157,7 @@ class FriendService {
 
   async getListOfMyFriends({ wallet, limit, offset, orderBy }) {
     try {
+      console.log(wallet);
       let where = {
         wallet: {
           not: wallet
@@ -164,25 +165,29 @@ class FriendService {
         OR: [
           {
             from_friends: {
-              every: {
+              some: {
                 status: {
                   equals: 1
                 },
-                to: wallet
+                to: {
+                  in: [wallet]
+                }
               }
             }
           },
           {
             to_friends: {
-              every: {
+              some: {
                 status: {
                   equals: 1
                 },
-                from: wallet
+                from: {
+                  in: [wallet]
+                }
               }
             }
           },
-        ]
+        ],
       }
       let count = await prisma.users.count({ where });
 
@@ -190,7 +195,7 @@ class FriendService {
         where,
         orderBy,
         take: limit,
-        skip: offset,
+        skip: offset
       });
       return {
         users,
@@ -202,52 +207,54 @@ class FriendService {
     }
   }
 
-  // async getTokenOfFriends({ wallet, limit, offset, orderBy}) {
-  //   try {
-  //     let where = {
-  //       wallet: {
-  //         not: wallet
-  //       },
-  //       OR: [
-  //         {
-  //           from_friends: {
-  //             every: {
-  //               status: {
-  //                 equals: 1
-  //               },
-  //               to: wallet
-  //             }
-  //           }
-  //         },
-  //         {
-  //           to_friends: {
-  //             every: {
-  //               status: {
-  //                 equals: 1
-  //               },
-  //               from: wallet
-  //             }
-  //           }
-  //         },
-  //       ]
-  //     }
-  //     let count = await prisma.users.count({ where });
+  async getTokensOfFriends({ wallet, limit, offset, orderBy}) {
+    try {
+      let where = {
+        ownerWallet: {
+          wallet: {
+            not: wallet
+          },
+          OR: [
+            {
+              from_friends: {
+                every: {
+                  status: {
+                    equals: 1
+                  },
+                  to: wallet
+                }
+              }
+            },
+            {
+              to_friends: {
+                every: {
+                  status: {
+                    equals: 1
+                  },
+                  from: wallet
+                }
+              }
+            },
+          ]
+        }
+      }
+      let count = await prisma.tokens.count({ where });
 
-  //     let users = await prisma.users.findMany({
-  //       where,
-  //       orderBy,
-  //       take: limit,
-  //       skip: offset,
-  //     });
-  //     return {
-  //       users,
-  //       count
-  //     };
-  //   } catch (err) {
-  //     console.log(err);
-  //     throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
-  //   }
-  // }
+      let tokens = await prisma.tokens.findMany({
+        where,
+        orderBy,
+        take: limit,
+        skip: offset,
+      });
+      return {
+        tokens,
+        count
+      };
+    } catch (err) {
+      console.log(err);
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
 }
 
 module.exports = FriendService;

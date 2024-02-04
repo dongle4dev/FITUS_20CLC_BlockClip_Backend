@@ -308,14 +308,14 @@ class CollectionService {
 
   async updateCollection(params) {
     try {
-      let current = await this.getCollectionByID(params);
+      let current = await this.getCollectionByCollectionID(params);
       let { collectionID: current_collectionID, title: current_title, description: current_description, bannerURL: current_bannerURL, 
             active: current_active, disabled: current_disabled, averagePrice: current_averagePrice, totalViews: current_totalViews} = current;
       let { collectionID: params_collectionID, title: params_title, description: params_description, bannerURL: params_bannerURL, 
             active: params_active, disabled: params_disabled, averagePrice: params_averagePrice, totalViews: params_totalViews } = params;
 
       let collection = await prisma.collections.update({
-        where: { id: params.id },
+        where: { id: current.id },
         data: {
           description: params_description
             ? params_description

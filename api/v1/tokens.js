@@ -551,7 +551,57 @@ router.put(
 
       let tokenExists = await tokenServiceInstance.getTokenByID(params);
 
-      if (tokenExists.length === 0) {
+      if (!tokenExists) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: "token doesnt exist" });
+      }
+
+      let token = await tokenServiceInstance.updateToken(
+        params
+      );
+      if (token) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.OK)
+          .json({ message: "token updated successfully", data: token });
+      } else {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: "token update failed" });
+      }
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+    }
+  }
+);
+
+router.put(
+  "/tokenID/:tokenID",
+  [check("tokenID", "A valid id is required").exists()],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+
+      if (!errors.isEmpty()) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ error: errors.array() });
+      }
+
+      let params = { ...req.params, ...req.body };
+
+      if (!params.tokenID) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: constants.MESSAGES.INPUT_VALIDATION_ERROR });
+      }
+
+      let tokenExists = await tokenServiceInstance.getTokenByTokenID(params);
+
+      if (!tokenExists) {
         return res
           .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
           .json({ message: "token doesnt exist" });

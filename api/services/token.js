@@ -155,6 +155,148 @@ class TokenService {
     }
   }
 
+  async getTokensByPrice({ limit, offset, orderBy, title, creator, owner, collectionID, status, active }) {
+    try {
+      let where;
+
+      if (status !== "" && active !== "") {
+        where = {
+          disabled: false,
+          collectionID: {
+            contains: collectionID
+          },
+          OR: [
+            {
+              title: {
+                contains: title,
+              }
+            },
+            {
+              title_lowercase: {
+                contains: title,
+              }
+            },
+          ],
+          creator: {
+            contains: creator
+          },
+          owner: {
+            contains: owner
+          },
+          marketorders: {
+            some: {
+              status: parseInt(status),
+            }
+          },
+          active: active == 'true'
+        };
+      } else if (status !== "") {
+        where = {
+          disabled: false,
+          collectionID: {
+            contains: collectionID
+          },
+          OR: [
+            {
+              title: {
+                contains: title,
+              }
+            },
+            {
+              title_lowercase: {
+                contains: title,
+              }
+            },
+          ],
+          creator: {
+            contains: creator
+          },
+          owner: {
+            contains: owner
+          },
+          marketorders: {
+            some: {
+              status: parseInt(status)
+            }
+          }
+        };
+      } else if (active !== "") {
+        where = {
+          disabled: false,
+          collectionID: {
+            contains: collectionID
+          },
+          OR: [
+            {
+              title: {
+                contains: title,
+              }
+            },
+            {
+              title_lowercase: {
+                contains: title,
+              }
+            },
+          ],
+          creator: {
+            contains: creator
+          },
+          owner: {
+            contains: owner
+          },
+          active: active == 'true'
+        };
+      } else {
+        where = {
+          disabled: false,
+          collectionID: {
+            contains: collectionID
+          },
+          OR: [
+            {
+              title: {
+                contains: title,
+              }
+            },
+            {
+              title_lowercase: {
+                contains: title,
+              }
+            },
+          ],
+          creator: {
+            contains: creator
+          },
+          owner: {
+            contains: owner
+          },
+        };
+      }
+
+      let count = 0;
+      if (creator !== "" || owner !== "" || collectionID !== "" || title !== "" || status !== "" || active !== "") {
+        count = await prisma.tokens.count({ where });
+      } else {
+        count = await prisma.tokens.count({ where: { disabled: false } });
+      }
+      let tokens = await prisma.tokens.findMany({
+        where,
+        orderBy,
+        take: limit,
+        skip: offset
+      });
+      return {
+        tokens,
+        count,
+        limit,
+        offset
+      };
+    } catch (err) {
+      console.log(err);
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   async createToken(params) {
     try {
       let { creator, owner, title, description, source, collectionID, chainID, contractAddress } = params;
@@ -321,7 +463,7 @@ class TokenService {
 
   async updateToken(params) {
     try {
-      let current = await this.getTokenByID(params);
+      let current = await this.getTokenByTokenID(params);
       let { description: params_description, source: params_source,
         title: params_title, active: params_active, disabled: params_disabled,
         tokenID: params_tokenID, contractAddress: params_contractAddress,
@@ -334,7 +476,7 @@ class TokenService {
       } = current;
       let token = await prisma.tokens.update({
         where: {
-          id: params.id
+          id: current.id
         },
         data: {
           description: params_description
@@ -345,7 +487,7 @@ class TokenService {
             ? params_title
             : current_title,
           active: params_active !== undefined
-            ? params_active
+            ? params_active 
             : current_active,
           disabled: params_disabled !== undefined ? params_disabled : current_disabled,
           title_lowercase: params_title

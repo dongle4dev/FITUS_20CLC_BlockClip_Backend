@@ -131,7 +131,7 @@ router.patch("/",
   }
 );
 
-/** get request */
+/** get friends */
 router.get("/myFriends",
   verifyToken,
   async (req, res) => {
@@ -151,6 +151,42 @@ router.get("/myFriends",
           data: {
             users: users.users,
             count: users.count
+          },
+        });
+      } else {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.NOT_FOUND)
+          .json({ message: constants.RESPONSE_STATUS.NOT_FOUND });
+      }
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+    }
+  }
+);
+
+/** get friend's tokens */
+router.get("/tokens",
+  verifyToken,
+  async (req, res) => {
+    try {
+      let limit = requestUtil.getLimit(req.query);
+      let offset = requestUtil.getOffset(req.query);
+      let orderBy = requestUtil.getSortBy(req.query, "+id");
+      let wallet = req.userWallet;
+
+      let tokens = await friendServiceInstance.getTokensOfFriends({
+        wallet, limit, offset, orderBy
+      });
+
+      if (tokens) {
+        return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
+          message: constants.RESPONSE_STATUS.SUCCESS,
+          data: {
+            tokens: tokens.tokens,
+            count: tokens.count
           },
         });
       } else {
