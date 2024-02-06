@@ -39,9 +39,9 @@ router.post(
             "apiKeyAuth": []
     }] */
     try {
-      let { title, creator } = req.body;
+      let { title, creatorCollection } = req.body;
       
-      if (!title || !creator) {
+      if (!title || !creatorCollection) {
         return res
           .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
           .json({ message: constants.MESSAGES.INPUT_VALIDATION_ERROR });
@@ -122,15 +122,15 @@ router.get("/user/:wallet",
     let orderBy = requestUtil.getSortBy(req.query, "+id");
     let chainID = requestUtil.getChainID(req.query);
     let title = requestUtil.getKeyword(req.query, "search");
-    let creator = req.params.wallet;
+    let creatorCollection = req.params.wallet;
     let category = requestUtil.getKeyword(req.query, "category");
     let active = requestUtil.getKeyword(req.query, "active");
 
-    if (creator !== "") {
-      if (!validate.isValidEthereumAddress(creator)) {
+    if (creatorCollection !== "") {
+      if (!validate.isValidEthereumAddress(creatorCollection)) {
         return res
         .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
-        .json({ message: 'creator address is not valid' });
+        .json({ message: 'creatorCollection address is not valid' });
       }
     }
 
@@ -140,7 +140,7 @@ router.get("/user/:wallet",
       orderBy,
       chainID,
       title,
-      creator,
+      creatorCollection,
       category,
       active
     });
@@ -177,12 +177,12 @@ router.get("/", async (req, res) => {
     let orderBy = requestUtil.getSortBy(req.query, "+id");
     let chainID = requestUtil.getChainID(req.query);
     let title = requestUtil.getKeyword(req.query, "search");
-    let creator = requestUtil.getKeyword(req.query, "creator");
+    let creatorCollection = requestUtil.getKeyword(req.query, "creatorCollection");
     let category = requestUtil.getKeyword(req.query, "category");
     let active = requestUtil.getKeyword(req.query, "active");
 
-    if (creator !== "") {
-      if (!validate.isValidEthereumAddress(creator)) {
+    if (creatorCollection !== "") {
+      if (!validate.isValidEthereumAddress(creatorCollection)) {
         return res
         .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
         .json({ message: 'creator address is not valid' });
@@ -195,7 +195,7 @@ router.get("/", async (req, res) => {
       orderBy,
       chainID,
       title,
-      creator,
+      creatorCollection,
       category,
       active
     });
@@ -345,6 +345,52 @@ router.patch(
   }
 );
 
+/**
+ *  Updates an existing collection of NFT token by collection id
+ */
+
+router.put(
+  "/collectionID/:collectionID",
+  verifyToken,
+  async (req, res) => {
+    try {
+      let params = { ...req.params, ...req.body };
+
+      if (!params.collectionID) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: constants.MESSAGES.INPUT_VALIDATION_ERROR });
+      }
+
+      let collectionExists = await collectionServiceInstance.getCollectionByCollectionID(params);
+
+      if (!collectionExists) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: "collection doesnt exists" });
+      }
+
+      let collection = await collectionServiceInstance.updateCollection(
+        params
+      );
+      if (collection) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.OK)
+          .json({ message: "collection updated successfully", data: collection });
+      } else {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: "collection update failed" });
+      }
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+    }
+  }
+);
+
 
 /**
  *  Updates an existing collection of NFT token by id
@@ -392,50 +438,6 @@ router.put(
   }
 );
 
-/**
- *  Updates an existing collection of NFT token by id
- */
 
-router.put(
-  "/collectionID/:collectionID",
-  verifyToken,
-  async (req, res) => {
-    try {
-      let params = { ...req.params, ...req.body };
-
-      if (!params.collectionID) {
-        return res
-          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
-          .json({ message: constants.MESSAGES.INPUT_VALIDATION_ERROR });
-      }
-
-      let collectionExists = await collectionServiceInstance.getCollectionByCollectionID(params);
-
-      if (!collectionExists) {
-        return res
-          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
-          .json({ message: "collection doesnt exists" });
-      }
-
-      let collection = await collectionServiceInstance.updateCollection(
-        params
-      );
-      if (collection) {
-        return res
-          .status(constants.RESPONSE_STATUS_CODES.OK)
-          .json({ message: "collection updated successfully", data: collection });
-      } else {
-        return res
-          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
-          .json({ message: "collection update failed" });
-      }
-    } catch (err) {
-      console.log(err);
-      return res
-        .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
-        .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
-    }
-  }
-);
 
 module.exports = router;

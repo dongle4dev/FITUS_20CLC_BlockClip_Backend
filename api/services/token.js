@@ -369,38 +369,62 @@ class TokenService {
     }
   }
 
-  async getTokensByUser({ limit, offset, orderBy, title, wallet, tokenID }) {
+  async getTokensByUser({ limit, offset, orderBy, title, wallet, tokenID, active }) {
     try {
-      let where = {
-        disabled: false,
-        tokenID: {
-          contains: tokenID
-        },
-        OR: [
-          {
-            title: {
-              contains: title,
-            }
+      let where;
+      if (active !== "") {
+        where = {
+          disabled: false,
+          tokenID: {
+            contains: tokenID
           },
-          {
-            title_lowercase: {
-              contains: title,
-            }
+          OR: [
+            {
+              title: {
+                contains: title,
+              }
+            },
+            {
+              title_lowercase: {
+                contains: title,
+              }
+            },
+          ],
+          creator: {
+            contains: wallet,
           },
-        ],
-        OR: [
-          {
-            creator: {
-              contains: wallet,
-            }
+          owner: {
+            contains: wallet,
           },
-          {
-            owner: {
-              contains: wallet,
-            }
+          active: active == 'true'
+        };
+      } else {
+        where = {
+          disabled: false,
+          tokenID: {
+            contains: tokenID
           },
-        ],
-      };
+          OR: [
+            {
+              title: {
+                contains: title,
+              }
+            },
+            {
+              title_lowercase: {
+                contains: title,
+              }
+            },
+          ],
+          creator: {
+            contains: wallet,
+          },
+          owner: {
+            contains: wallet,
+          },
+        };
+      }
+      
 
       let count = await prisma.tokens.count({ where });
       let tokens = await prisma.tokens.findMany({
@@ -421,26 +445,50 @@ class TokenService {
     }
   }
 
-  async getFavoritedTokensByUser({ limit, offset, orderBy, title, wallet }) {
+  async getFavoritedTokensByUser({ limit, offset, orderBy, title, wallet, active }) {
     try {
-      let where = {
-        disabled: false,
-        OR: [
-          {
-            title: {
-              contains: title,
-            }
+      let where; 
+      if (active !== "") {
+        where = {
+          disabled: false,
+          OR: [
+            {
+              title: {
+                contains: title,
+              }
+            },
+            {
+              title_lowercase: {
+                contains: title,
+              }
+            },
+          ],
+          listOfFavoriteUsers: {
+            hasSome: [wallet]
+          }
+        };
+      } else {
+        where = {
+          disabled: false,
+          OR: [
+            {
+              title: {
+                contains: title,
+              }
+            },
+            {
+              title_lowercase: {
+                contains: title,
+              }
+            },
+          ],
+          listOfFavoriteUsers: {
+            hasSome: [wallet]
           },
-          {
-            title_lowercase: {
-              contains: title,
-            }
-          },
-        ],
-        listOfFavoriteUsers: {
-          hasSome: [wallet]
-        }
-      };
+          active: active == 'true'
+        };
+      }
+      
 
       let count = await prisma.tokens.count({ where });
       let tokens = await prisma.tokens.findMany({
@@ -463,7 +511,7 @@ class TokenService {
 
   async updateToken(params) {
     try {
-      let current = await this.getTokenByTokenID(params);
+      let current = await this.getTokenByID(params);
       let { description: params_description, source: params_source,
         title: params_title, active: params_active, disabled: params_disabled,
         tokenID: params_tokenID, contractAddress: params_contractAddress,

@@ -12,13 +12,13 @@ const pinata = new pinataSDK(config.PINATA_API_KEY, config.PINATA_API_SECRET);
 
 class CollectionService {
   async createCollection(params) {
-    let { title, description, creator, chainID, contractAddress, paymentType, category, bannerURL } = params;
+    let { title, description, creatorCollection, chainID, contractAddress, paymentType, category, bannerURL } = params;
     try {
       let collection = await prisma.collections.create({
         data: {
           title: title,
           description: description,
-          creator: {connect: {wallet: creator}},
+          creator: {connect: {wallet: creatorCollection}},
           chainID: chainID,
           contractAddress: contractAddress,
           paymentType: paymentType,
@@ -39,11 +39,11 @@ class CollectionService {
     }
   }
 
-  async getCollections({ limit, offset, orderBy, chainID, title, creator, category, active }) {
+  async getCollections({ limit, offset, orderBy, chainID, title, creatorCollection, category, active }) {
     try {
       let where;
       let count = 0;
-      if (creator !== "" || category !== "" || active !== "") {
+      if (creatorCollection !== "" || category !== "" || active !== "") {
         if (active !== "") {
           where = {
             disabled: false,
@@ -57,7 +57,7 @@ class CollectionService {
               }},
             ],
             creatorCollection: {
-              contains: creator
+              contains: creatorCollection
             },
             category: {
               contains: category
@@ -77,7 +77,7 @@ class CollectionService {
               }},
             ],
             creatorCollection: {
-              contains: creator
+              contains: creatorCollection
             },
             category: {
               contains: category
@@ -107,11 +107,11 @@ class CollectionService {
     }
   }
 
-  async getCollectionsByWallet({ limit, offset, orderBy, chainID, title, creator, category, active }) {
+  async getCollectionsByWallet({ limit, offset, orderBy, chainID, title, creatorCollection, category, active }) {
     try {
       let where;
       let count = 0;
-      if (creator !== "" || category !== "" || active !== "") {
+      if (creatorCollection !== "" || category !== "" || active !== "") {
         if (active !== "") {
           where = {
             disabled: false,
@@ -125,7 +125,7 @@ class CollectionService {
               }},
             ],
             creatorCollection: {
-              contains: creator
+              contains: creatorCollection
             },
             category: {
               contains: category
@@ -145,7 +145,7 @@ class CollectionService {
               }},
             ],
             creatorCollection: {
-              contains: creator
+              contains: creatorCollection
             },
             category: {
               contains: category
@@ -307,6 +307,51 @@ class CollectionService {
 
 
   async updateCollection(params) {
+    try {
+      let current = await this.getCollectionByID(params);
+      let { collectionID: current_collectionID, title: current_title, description: current_description, bannerURL: current_bannerURL, 
+            active: current_active, disabled: current_disabled, averagePrice: current_averagePrice, totalViews: current_totalViews} = current;
+      let { collectionID: params_collectionID, title: params_title, description: params_description, bannerURL: params_bannerURL, 
+            active: params_active, disabled: params_disabled, averagePrice: params_averagePrice, totalViews: params_totalViews } = params;
+
+      let collection = await prisma.collections.update({
+        where: { id: current.id },
+        data: {
+          description: params_description
+            ? params_description
+            : current_description,
+          bannerURL: params_bannerURL ? params_bannerURL : current_bannerURL,
+          title: params_title ? params_title : current_title,
+          title_lowercase: params_title ? params_title.toLowerCase(): current_title.toLowerCase(),
+          collectionID: params_collectionID ? params_collectionID : current_collectionID,
+          active: params_active !== undefined ? params_active : current_active,
+          disabled: params_disabled !== undefined ? params_disabled : current_disabled,
+          averagePrice: params_averagePrice ? params_averagePrice : current_averagePrice,
+          totalViews: params_totalViews ? params_totalViews : current_totalViews,
+        },
+      });
+
+      if (params_description || params_bannerURL || params_title) {
+        let tempCol = {...collection};
+        delete tempCol.id, delete tempCol.active, delete tempCol.disabled;
+        delete tempCol.updatedAt, delete tempCol.createdAt;
+        delete tempCol.averagePrice, delete tempCol.totalViews;
+        delete tempCol.collectionID, delete tempCol.title_lowercase;
+        const res = await pinata.pinJSONToIPFS(tempCol);
+        if (params.collectionURI) {
+          const res2 = await pinata.unpin(params.collectionURI.split('/')[4]);
+          console.log("Unpin collection on Pinata: " + res2);
+        }
+        return {collection, collectionURI: `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}`};
+      } else return collection;
+      
+    } catch (err) {
+      console.log(err);
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async updateCollectionByCollectionID(params) {
     try {
       let current = await this.getCollectionByCollectionID(params);
       let { collectionID: current_collectionID, title: current_title, description: current_description, bannerURL: current_bannerURL, 

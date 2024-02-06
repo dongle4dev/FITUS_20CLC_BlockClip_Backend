@@ -112,6 +112,7 @@ router.get(
     let orderBy = requestUtil.getSortBy(req.query, "+id");
     let title = requestUtil.getKeyword(req.query, "search");
     let collectionID = requestUtil.getKeyword(req.query, "collectionID");
+    let active = requestUtil.getKeyword(req.query, "active");
 
     let user = await userServiceInstance.getUser({ wallet });
 
@@ -122,7 +123,7 @@ router.get(
     }
 
     let tokens = await tokenServiceInstance.getTokensByUser({
-      limit, offset, orderBy, title, wallet, collectionID
+      limit, offset, orderBy, title, wallet, collectionID, active
     });
 
     return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
@@ -162,6 +163,7 @@ router.get(
     let offset = requestUtil.getOffset(req.query);
     let orderBy = requestUtil.getSortBy(req.query, "+id");
     let title = requestUtil.getKeyword(req.query, "search");
+    let active = requestUtil.getKeyword(req.query, "active");
 
     let user = await userServiceInstance.getUser({ wallet });
 
@@ -172,7 +174,7 @@ router.get(
     }
 
     let tokens = await tokenServiceInstance.getFavoritedTokensByUser({
-      limit, offset, orderBy, title, wallet
+      limit, offset, orderBy, title, wallet, active
     });
 
     return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
