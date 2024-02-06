@@ -424,7 +424,7 @@ class TokenService {
           },
         };
       }
-      
+
 
       let count = await prisma.tokens.count({ where });
       let tokens = await prisma.tokens.findMany({
@@ -447,7 +447,7 @@ class TokenService {
 
   async getFavoritedTokensByUser({ limit, offset, orderBy, title, wallet, active }) {
     try {
-      let where; 
+      let where;
       if (active !== "") {
         where = {
           disabled: false,
@@ -488,7 +488,7 @@ class TokenService {
           active: active == 'true'
         };
       }
-      
+
 
       let count = await prisma.tokens.count({ where });
       let tokens = await prisma.tokens.findMany({
@@ -535,7 +535,7 @@ class TokenService {
             ? params_title
             : current_title,
           active: params_active !== undefined
-            ? params_active 
+            ? params_active
             : current_active,
           disabled: params_disabled !== undefined ? params_disabled : current_disabled,
           title_lowercase: params_title
@@ -611,7 +611,7 @@ class TokenService {
           ownerWallet: params_owner ? {
             connect: { wallet: params_owner }
           } : {
-            connect: { wallet: current_wallet }
+            connect: { wallet: current_owner }
           },
         },
       });

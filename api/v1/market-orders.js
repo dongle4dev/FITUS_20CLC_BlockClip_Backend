@@ -202,7 +202,6 @@ router.get(
       let orderBy = requestUtil.getSortBy(req.query, "+id");
       let tokenID = requestUtil.getKeyword(req.query, "tokenID");
       let status = requestUtil.getKeyword(req.query, "status");
-      
 
       let orders = await marketOrderServiceInstance.getOrders({
         tokenID,
@@ -217,6 +216,50 @@ router.get(
           message: constants.RESPONSE_STATUS.SUCCESS,
           data: {
             order: orders.order,
+            count: orders.count
+          },
+        });
+      } else {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.NOT_FOUND)
+          .json({ message: constants.RESPONSE_STATUS.NOT_FOUND });
+      }
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+    }
+  }
+);
+
+/**
+ *  Gets all the tokens details by status, price
+ */
+
+router.get(
+  "/tokens",
+  async (req, res) => {
+    try {
+      let limit = requestUtil.getLimit(req.query);
+      let offset = requestUtil.getOffset(req.query);
+      let orderBy = requestUtil.getSortBy(req.query, "+id");
+      let status = requestUtil.getKeyword(req.query, "status");
+      let active = requestUtil.getKeyword(req.query, "active");
+
+      let orders = await marketOrderServiceInstance.getTokensByOrder({
+        status,
+        active,
+        limit,
+        offset,
+        orderBy,
+      });
+
+      if (orders) {
+        return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
+          message: constants.RESPONSE_STATUS.SUCCESS,
+          data: {
+            token: orders.tokens,
             count: orders.count
           },
         });

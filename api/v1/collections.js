@@ -370,7 +370,7 @@ router.put(
           .json({ message: "collection doesnt exists" });
       }
 
-      let collection = await collectionServiceInstance.updateCollection(
+      let collection = await collectionServiceInstance.updateCollectionByCollectionID(
         params
       );
       if (collection) {
