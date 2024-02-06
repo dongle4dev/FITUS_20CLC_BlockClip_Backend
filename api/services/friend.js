@@ -80,6 +80,9 @@ class FriendService {
             contains: ""
           },
         },
+        orderBy: {
+          createdAt: 'desc'
+        }
       });
 
       return request.at(0);
