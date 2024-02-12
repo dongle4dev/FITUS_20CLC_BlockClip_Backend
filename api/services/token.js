@@ -459,7 +459,7 @@ class TokenService {
             },
             {
               title_lowercase: {
-                contains: title,
+                contains: title.toLowerCase(),
               }
             },
           ],
@@ -478,7 +478,7 @@ class TokenService {
             },
             {
               title_lowercase: {
-                contains: title,
+                contains: title.toLowerCase(),
               }
             },
           ],

@@ -18,21 +18,21 @@ class CollectionService {
         data: {
           title: title,
           description: description,
-          creator: {connect: {wallet: creatorCollection}},
+          creator: { connect: { wallet: creatorCollection } },
           chainID: chainID,
           contractAddress: contractAddress,
           paymentType: paymentType,
           category: category,
           title_lowercase: title.toLowerCase(),
           bannerURL: bannerURL,
-        },  
+        },
       });
-      let tempCol = {...collection};
+      let tempCol = { ...collection };
       delete tempCol.id, delete tempCol.active, delete tempCol.disabled, delete tempCol.updatedAt, delete tempCol.createdAt;
       delete tempCol.averagePrice, delete tempCol.totalViews;
       const res = await pinata.pinJSONToIPFS(tempCol);
 
-      return {collection, collectionURI: `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}`};
+      return { collection, collectionURI: `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}` };
     } catch (err) {
       console.log(err);
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
@@ -48,13 +48,17 @@ class CollectionService {
           where = {
             disabled: false,
             chainID: chainID,
-            OR:[
-              {title: {
-                contains: title,
-              }},
-              {title_lowercase: {
-                contains: title,
-              }},
+            OR: [
+              {
+                title: {
+                  contains: title,
+                }
+              },
+              {
+                title_lowercase: {
+                  contains: title,
+                }
+              },
             ],
             creatorCollection: {
               contains: creatorCollection
@@ -63,18 +67,22 @@ class CollectionService {
               contains: category
             },
             active: active == 'true'
-        };
+          };
         } else {
           where = {
             disabled: false,
             chainID: chainID,
-            OR:[
-              {title: {
-                contains: title,
-              }},
-              {title_lowercase: {
-                contains: title,
-              }},
+            OR: [
+              {
+                title: {
+                  contains: title,
+                }
+              },
+              {
+                title_lowercase: {
+                  contains: title,
+                }
+              },
             ],
             creatorCollection: {
               contains: creatorCollection
@@ -86,14 +94,14 @@ class CollectionService {
         }
         count = await prisma.collections.count({ where });
       } else {
-        count = await prisma.collections.count({ where: {disabled: false, chainID: chainID} });
+        count = await prisma.collections.count({ where: { disabled: false, chainID: chainID } });
       }
       let collections = await prisma.collections.findMany({
         where,
         orderBy,
         take: limit,
         skip: offset
-      }); 
+      });
       return {
         collections,
         count,
@@ -116,13 +124,17 @@ class CollectionService {
           where = {
             disabled: false,
             chainID: chainID,
-            OR:[
-              {title: {
-                contains: title,
-              }},
-              {title_lowercase: {
-                contains: title,
-              }},
+            OR: [
+              {
+                title: {
+                  contains: title,
+                }
+              },
+              {
+                title_lowercase: {
+                  contains: title,
+                }
+              },
             ],
             creatorCollection: {
               contains: creatorCollection
@@ -131,18 +143,22 @@ class CollectionService {
               contains: category
             },
             active: active == 'true'
-        };
+          };
         } else {
           where = {
             disabled: false,
             chainID: chainID,
-            OR:[
-              {title: {
-                contains: title,
-              }},
-              {title_lowercase: {
-                contains: title,
-              }},
+            OR: [
+              {
+                title: {
+                  contains: title,
+                }
+              },
+              {
+                title_lowercase: {
+                  contains: title,
+                }
+              },
             ],
             creatorCollection: {
               contains: creatorCollection
@@ -154,14 +170,14 @@ class CollectionService {
         }
         count = await prisma.collections.count({ where });
       } else {
-        count = await prisma.collections.count({ where: {disabled: false, chainID: chainID} });
+        count = await prisma.collections.count({ where: { disabled: false, chainID: chainID } });
       }
       let collections = await prisma.collections.findMany({
         where,
         orderBy,
         take: limit,
         skip: offset
-      }); 
+      });
       return {
         collections,
         count,
@@ -206,39 +222,43 @@ class CollectionService {
     }
   }
 
-//   async collectionAddressExists(params) {
-//     let { address } = params;
-//     try {
-//       let collections = await prisma.collectionsaddresses.findOne({
-//         where: {
-//           address_chain_id: {
-//             address: params.address,
-//             chain_id: params.chain_id,
-//           },
-//         },
-//       });
+  //   async collectionAddressExists(params) {
+  //     let { address } = params;
+  //     try {
+  //       let collections = await prisma.collectionsaddresses.findOne({
+  //         where: {
+  //           address_chain_id: {
+  //             address: params.address,
+  //             chain_id: params.chain_id,
+  //           },
+  //         },
+  //       });
 
-//       collections;
-//       return collections;
-//     } catch (err) {
-//       console.log(err);
-//       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
-//     }
-//   }
+  //       collections;
+  //       return collections;
+  //     } catch (err) {
+  //       console.log(err);
+  //       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+  //     }
+  //   }
 
   async getCollectionsByTitle(params) {
     try {
       let title = params;
-      
+
       const collections = await prisma.collections.findMany({
         where: {
-          OR:[
-            {title: {
-              contains: title,
-            }},
-            {title_lowercase: {
-              contains: title,
-            }},
+          OR: [
+            {
+              title: {
+                contains: title,
+              }
+            },
+            {
+              title_lowercase: {
+                contains: title,
+              }
+            },
           ],
           active: true
         },
@@ -281,7 +301,7 @@ class CollectionService {
     try {
       let { collectionID } = params;
       let collections = await prisma.collections.findMany({
-        where: { 
+        where: {
           collectionID: collectionID
         },
       });
@@ -305,14 +325,13 @@ class CollectionService {
     }
   }
 
-
   async updateCollection(params) {
     try {
       let current = await this.getCollectionByID(params);
-      let { collectionID: current_collectionID, title: current_title, description: current_description, bannerURL: current_bannerURL, 
-            active: current_active, disabled: current_disabled, averagePrice: current_averagePrice, totalViews: current_totalViews} = current;
-      let { collectionID: params_collectionID, title: params_title, description: params_description, bannerURL: params_bannerURL, 
-            active: params_active, disabled: params_disabled, averagePrice: params_averagePrice, totalViews: params_totalViews } = params;
+      let { collectionID: current_collectionID, title: current_title, description: current_description, bannerURL: current_bannerURL,
+        active: current_active, disabled: current_disabled, averagePrice: current_averagePrice, totalViews: current_totalViews } = current;
+      let { collectionID: params_collectionID, title: params_title, description: params_description, bannerURL: params_bannerURL,
+        active: params_active, disabled: params_disabled, averagePrice: params_averagePrice, totalViews: params_totalViews } = params;
 
       let collection = await prisma.collections.update({
         where: { id: current.id },
@@ -322,7 +341,7 @@ class CollectionService {
             : current_description,
           bannerURL: params_bannerURL ? params_bannerURL : current_bannerURL,
           title: params_title ? params_title : current_title,
-          title_lowercase: params_title ? params_title.toLowerCase(): current_title.toLowerCase(),
+          title_lowercase: params_title ? params_title.toLowerCase() : current_title.toLowerCase(),
           collectionID: params_collectionID ? params_collectionID : current_collectionID,
           active: params_active !== undefined ? params_active : current_active,
           disabled: params_disabled !== undefined ? params_disabled : current_disabled,
@@ -332,7 +351,7 @@ class CollectionService {
       });
 
       if (params_description || params_bannerURL || params_title) {
-        let tempCol = {...collection};
+        let tempCol = { ...collection };
         delete tempCol.id, delete tempCol.active, delete tempCol.disabled;
         delete tempCol.updatedAt, delete tempCol.createdAt;
         delete tempCol.averagePrice, delete tempCol.totalViews;
@@ -342,9 +361,9 @@ class CollectionService {
           const res2 = await pinata.unpin(params.collectionURI.split('/')[4]);
           console.log("Unpin collection on Pinata: " + res2);
         }
-        return {collection, collectionURI: `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}`};
+        return { collection, collectionURI: `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}` };
       } else return collection;
-      
+
     } catch (err) {
       console.log(err);
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
@@ -354,10 +373,10 @@ class CollectionService {
   async updateCollectionByCollectionID(params) {
     try {
       let current = await this.getCollectionByCollectionID(params);
-      let { collectionID: current_collectionID, title: current_title, description: current_description, bannerURL: current_bannerURL, 
-            active: current_active, disabled: current_disabled, averagePrice: current_averagePrice, totalViews: current_totalViews} = current;
-      let { collectionID: params_collectionID, title: params_title, description: params_description, bannerURL: params_bannerURL, 
-            active: params_active, disabled: params_disabled, averagePrice: params_averagePrice, totalViews: params_totalViews } = params;
+      let { collectionID: current_collectionID, title: current_title, description: current_description, bannerURL: current_bannerURL,
+        active: current_active, disabled: current_disabled, averagePrice: current_averagePrice, totalViews: current_totalViews } = current;
+      let { collectionID: params_collectionID, title: params_title, description: params_description, bannerURL: params_bannerURL,
+        active: params_active, disabled: params_disabled, averagePrice: params_averagePrice, totalViews: params_totalViews } = params;
 
       let collection = await prisma.collections.update({
         where: { id: current.id },
@@ -367,7 +386,7 @@ class CollectionService {
             : current_description,
           bannerURL: params_bannerURL ? params_bannerURL : current_bannerURL,
           title: params_title ? params_title : current_title,
-          title_lowercase: params_title ? params_title.toLowerCase(): current_title.toLowerCase(),
+          title_lowercase: params_title ? params_title.toLowerCase() : current_title.toLowerCase(),
           collectionID: params_collectionID ? params_collectionID : current_collectionID,
           active: params_active !== undefined ? params_active : current_active,
           disabled: params_disabled !== undefined ? params_disabled : current_disabled,
@@ -377,7 +396,7 @@ class CollectionService {
       });
 
       if (params_description || params_bannerURL || params_title) {
-        let tempCol = {...collection};
+        let tempCol = { ...collection };
         delete tempCol.id, delete tempCol.active, delete tempCol.disabled;
         delete tempCol.updatedAt, delete tempCol.createdAt;
         delete tempCol.averagePrice, delete tempCol.totalViews;
@@ -387,9 +406,9 @@ class CollectionService {
           const res2 = await pinata.unpin(params.collectionURI.split('/')[4]);
           console.log("Unpin collection on Pinata: " + res2);
         }
-        return {collection, collectionURI: `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}`};
+        return { collection, collectionURI: `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}` };
       } else return collection;
-      
+
     } catch (err) {
       console.log(err);
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);

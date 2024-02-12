@@ -259,7 +259,7 @@ router.get(
         return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
           message: constants.RESPONSE_STATUS.SUCCESS,
           data: {
-            token: orders.tokens,
+            tokens: orders.tokens,
             count: orders.count
           },
         });
