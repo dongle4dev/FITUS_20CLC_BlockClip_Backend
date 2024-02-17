@@ -7,6 +7,8 @@ const collections = require("./collections");
 const orders = require("./market-orders");
 const tokens = require("./tokens");
 const friends = require("./friends");
+const chats = require("./chats");
+const messages = require("./messages");
 const path = require("path");
 
 /**
@@ -23,5 +25,7 @@ router.use("/collections", collections);
 router.use("/tokens", tokens);
 router.use("/orders", orders);
 router.use("/friends", friends);
+router.use("/chats", chats);
+router.use("/messages", messages);
 
 module.exports = router;

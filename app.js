@@ -4,20 +4,22 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const config = require("./config/config");
 const routeV1 = require("./api/v1/");
+const { app, io } = require("./socket/socket.js");
 
 
 /**
  * Root route, middlewares
  */
 
-let app = express();
+// let app = express();
 
 app.use(express.static(__dirname));
 app.use(express.json())
-app.use(express.urlencoded({extended: true}))
+app.use(express.urlencoded({ extended: true }))
 // app.use(bodyParser.urlencoded({ extended: false }));
 // app.use(bodyParser.json());
 app.use("/public", express.static("public"));
+io.listen(5000);
 
 if (config.NODE_ENV !== "test") {
   app.use(morgan("dev"));

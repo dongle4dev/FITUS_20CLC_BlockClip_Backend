@@ -30,6 +30,7 @@
     "ethers": "^6.9.2",
     "express": "^4.18.2",
     "express-validator": "^7.0.1",
+    "http": "0.0.1-security",
     "jsonwebtoken": "^9.0.2",
     "mocha": "^10.2.0",
     "mocha-junit-reporter": "^2.2.1",
@@ -40,6 +41,7 @@
     "npm-check-updates": "^16.14.12",
     "patch-package": "^8.0.0",
     "redis": "^4.6.12",
+    "socket.io": "^4.7.4",
     "swagger-autogen": "^2.23.7",
     "swagger-ui-express": "^5.0.0"
   },

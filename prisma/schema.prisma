@@ -23,6 +23,9 @@ model users {
   collections   collections[]
   creator_tokens tokens[]       @relation("creator_tokens")
   owner_tokens   tokens[]       @relation("owner_tokens")
+  messages      messages[]
+  firstUser_chats         chats[]         @relation("firstUser_chats")
+  secondUser_chats        chats[]         @relation("secondUser_chats")
 }
 
 model collections {
@@ -100,4 +103,26 @@ model friends {
   updatedAt           DateTime        @updatedAt
   requester           users           @relation("from_friends", fields: [from], references: [wallet])
   recipient           users           @relation("to_friends", fields: [to], references: [wallet])
+}
+
+model chats {
+  id                  String          @id @default(auto()) @map("_id") @db.ObjectId
+  firstUser           String          
+  secondUser          String        
+  messages            messages[]  
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  firstUserWallet     users           @relation("firstUser_chats", fields: [firstUser], references: [wallet])
+  secondUserWallet    users           @relation("secondUser_chats", fields: [secondUser], references: [wallet])
+}
+
+model messages {
+  id                  String          @id @default(auto()) @map("_id") @db.ObjectId
+  chatID              String
+  content             String   
+  senderID            String
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  chat                chats           @relation(fields: [chatID], references: [id])
+  sender              users           @relation(fields: [senderID], references: [wallet])
 }
