@@ -107,7 +107,7 @@ router.get("/",
         return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
           message: constants.RESPONSE_STATUS.SUCCESS,
           data: {
-            request: messages.messages,
+            messages: messages.messages,
             count: messages.count
           },
         });

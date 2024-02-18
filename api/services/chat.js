@@ -49,9 +49,16 @@ class chatService {
       let { id } = params;
       let chats = await prisma.chats.findMany({
         where: { id: id },
+        include: {
+          messages: {
+            take: 1,
+            orderBy: {
+              createdAt: 'desc'
+            }
+          }
+        }
       });
 
-      
       return chats.at(0);
     } catch (err) {
       console.log(err);
@@ -87,6 +94,14 @@ class chatService {
         orderBy,
         take: limit,
         skip: offset,
+        include: {
+          messages: {
+            take: 1,
+            orderBy: {
+              createdAt: 'desc'
+            }
+          }
+        }
       });
       return {
         chat,

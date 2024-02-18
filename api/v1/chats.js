@@ -106,12 +106,16 @@ router.get(
 
 /** get chat of user */
 router.get("/",
+  verifyToken,
   async (req, res) => {
     try {
       let limit = requestUtil.getLimit(req.query);
       let offset = requestUtil.getOffset(req.query);
       let orderBy = requestUtil.getSortBy(req.query, "+id");
+      // let user = req.userWallet || requestUtil.getKeyword(req.query, "user");
       let user = requestUtil.getKeyword(req.query, "user");
+
+
 
       let chats = await chatServiceInstance.getChats({
         user, limit, offset, orderBy
@@ -121,7 +125,7 @@ router.get("/",
         return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
           message: constants.RESPONSE_STATUS.SUCCESS,
           data: {
-            request: chats.chat,
+            chats: chats.chat,
             count: chats.count
           },
         });
