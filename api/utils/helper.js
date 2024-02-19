@@ -1,6 +1,7 @@
 let ethers = require("ethers");
 let config = require("../../config/config");
 let artifacts = require("./artifacts.json");
+let mongodb = require("mongodb");
 // const fetch = require("node-fetch");
 // const provider = new ethers.HttpProvider(config.ETHEREUM_RPC);
 // let { exchangeDataEncoder } = require("@0x/contracts-exchange");
@@ -16,6 +17,10 @@ let artifacts = require("./artifacts.json");
 //   RPCSubprovider,
 //   ethersProviderEngine,
 // } = require("@0x/subproviders");
+
+function isValidMongodbID(id) {
+  return mongodb.ObjectId.isValid(id);
+}
 
 function isValidEthereumAddress(address) {
   return ethers.isAddress(address);
@@ -260,19 +265,20 @@ async function checkOwnerShip(userAddress, tokenId, contractAddress) {
 module.exports = {
   isValidEthereumAddress,
   // notify,
-//   getRate,
+  //   getRate,
   toChecksumAddress,
   toNumber,
   toHex,
   removeItemOnce,
-//   matic_balance,
-//   ethereum_balance,
-//   executeMetaTransaction,
-//   calculateProtocolFee,
-//   providerEngine,
-//   encodeExchangeData,
+  //   matic_balance,
+  //   ethereum_balance,
+  //   executeMetaTransaction,
+  //   calculateProtocolFee,
+  //   providerEngine,
+  //   encodeExchangeData,
   checkOwnerShip,
-//   checkTokenBalance,
-//   fetchMetadata,
-//   fetchMetadataFromTokenURI,
+  isValidMongodbID,
+  //   checkTokenBalance,
+  //   fetchMetadata,
+  //   fetchMetadataFromTokenURI,
 };

@@ -44,6 +44,26 @@ class chatService {
     }
   }
 
+  async getChatByUser(params) {
+    try {
+      let { firstUser, secondUser } = params;
+      let chat = await prisma.chats.findMany({
+        where: {
+          firstUser: {
+            in: [firstUser, secondUser]
+          },
+          secondUser: {
+            in: [firstUser, secondUser]
+          },
+        }
+      });
+      return chat.at(0);
+    } catch (err) {
+      console.log(err);
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   async getChatByID(params) {
     try {
       let { id } = params;
@@ -58,8 +78,15 @@ class chatService {
           }
         }
       });
+      if (chats.length > 0) {
+        chats = chats[0];
+        chats.lastMessage = chats.messages.at(0);
+        delete chats.messages;
 
-      return chats.at(0);
+        return chats;
+      }
+
+      return chats[0];
     } catch (err) {
       console.log(err);
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
@@ -103,6 +130,12 @@ class chatService {
           }
         }
       });
+
+      await chat.forEach((chat) => {
+        chat.lastMessage = chat.messages.at(0);
+        delete chat.messages;
+      })
+
       return {
         chat,
         count

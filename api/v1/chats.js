@@ -70,7 +70,42 @@ router.post(
 );
 
 /**
- *  get chat
+ *  get chat by user
+ */
+
+router.get(
+  "/recipient/:recipient",
+  verifyToken,
+  [check("recipient", "A recipient id is required").exists()],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+
+      if (!errors.isEmpty()) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ error: errors.array() });
+      }
+      console.log(req.userWallet)
+
+      let chat = await chatServiceInstance.getChatByUser({
+        firstUser: req.userWallet, secondUser: req.params.recipient
+      });
+
+      return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
+        message: constants.RESPONSE_STATUS.SUCCESS,
+        data: chat ? chat : {}
+      });
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+    }
+  });
+
+/**
+ *  get chat by chatID
  */
 
 router.get(
@@ -87,13 +122,19 @@ router.get(
           .json({ error: errors.array() });
       }
 
+      if (!helper.isValidMongodbID(req.params.chatID)) {
+        return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
+          message: 'Chat ID is not valid',
+        });
+      }
+
       let chat = await chatServiceInstance.getChatByID({
         id: req.params.chatID
       });
 
       return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
         message: constants.RESPONSE_STATUS.SUCCESS,
-        data: chat? chat : {}
+        data: chat ? chat : {}
       });
     } catch (err) {
       console.log(err);
@@ -112,9 +153,8 @@ router.get("/",
       let limit = requestUtil.getLimit(req.query);
       let offset = requestUtil.getOffset(req.query);
       let orderBy = requestUtil.getSortBy(req.query, "+id");
-      // let user = req.userWallet || requestUtil.getKeyword(req.query, "user");
-      let user = requestUtil.getKeyword(req.query, "user");
-
+      let user = requestUtil.getKeyword(req.query, "user") || req.userWallet;
+      // let user = requestUtil.getKeyword(req.query, "user");
 
 
       let chats = await chatServiceInstance.getChats({
