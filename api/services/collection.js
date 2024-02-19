@@ -102,6 +102,23 @@ class CollectionService {
         take: limit,
         skip: offset
       });
+
+      // await collections.forEach(async (collection) => {
+      //   const aggregations = await prisma.marketorders.aggregate({
+      //     _avg: {
+      //       price: true,
+      //     },
+      //     where: {
+      //       tokens: {
+      //         collectionID: collection.collectionID,
+      //         active: true
+      //       }         
+      //     }
+      //   })
+
+      //   collection.averagePrice = aggregations._avg
+      // })
+
       return {
         collections,
         count,

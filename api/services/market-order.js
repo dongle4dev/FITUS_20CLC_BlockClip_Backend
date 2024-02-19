@@ -142,7 +142,6 @@ class MarketOrderService {
           status: status ? parseInt(status) : {
             not: 5
           }
-
         };
       }
 
