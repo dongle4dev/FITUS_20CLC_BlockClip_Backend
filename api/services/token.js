@@ -465,7 +465,8 @@ class TokenService {
           ],
           listOfFavoriteUsers: {
             hasSome: [wallet]
-          }
+          },
+          active: active == 'true'
         };
       } else {
         where = {
@@ -485,7 +486,6 @@ class TokenService {
           listOfFavoriteUsers: {
             hasSome: [wallet]
           },
-          active: active == 'true'
         };
       }
 
@@ -786,6 +786,35 @@ class TokenService {
           },
           data: {
             totalViews: tokens.totalViews + 1
+          }
+        })
+        return token;
+      }
+      else return tokens;
+    } catch (err) {
+      console.log(err);
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async shareToken(params) {
+    try {
+      let { tokenID } = params;
+      let tokens = await prisma.tokens.findMany({
+        where: {
+          tokenID: tokenID
+        },
+      });
+
+      if (tokens.length > 0) {
+        tokens = tokens.at(0);
+
+        let token = await prisma.tokens.update({
+          where: {
+            tokenID: tokenID
+          },
+          data: {
+            totalShares: tokens.totalShares + 1
           }
         })
         return token;

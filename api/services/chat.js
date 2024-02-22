@@ -93,7 +93,7 @@ class chatService {
     }
   }
 
-  async getChats({ user, limit, offset, orderBy }) {
+  async getChats({ user, username, lastMessage, limit, offset, orderBy }) {
     try {
       let where = {
         OR: [
@@ -109,6 +109,22 @@ class chatService {
               in: [user]
             } : {
               contains: ""
+            }
+          },
+        ],
+        OR: [
+          {
+            firstUserWallet: {
+              username: {
+                contains: username
+              }
+            }
+          },
+          {
+            secondUserWallet: {
+              username: {
+                contains: username
+              }
             }
           },
         ],
@@ -131,9 +147,23 @@ class chatService {
         }
       });
 
-      await chat.forEach((chat) => {
+      chat = await chat.filter((chat) => {
         chat.lastMessage = chat.messages.at(0);
         delete chat.messages;
+        if (lastMessage !== "") {
+          if (chat.lastMessage) {
+            if (chat.lastMessage.content.includes(lastMessage)) {
+              return true;
+            } else {
+              count--;
+              return false;
+            }
+          } else {
+            count--;
+            return false;
+          }
+        }
+        return true;
       })
 
       return {

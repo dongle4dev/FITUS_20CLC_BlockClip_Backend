@@ -69,6 +69,7 @@ model tokens {
   listOfLikedUsers    String[] 
   listOfFavoriteUsers    String[]    
   totalViews          Int             @default(0)
+  totalShares         Int             @default(0)
   marketorders        marketorders[]
   creatorWallet       users         @relation("creator_tokens", fields: [creator], references: [wallet])
   ownerWallet         users         @relation("owner_tokens", fields: [owner], references: [wallet])

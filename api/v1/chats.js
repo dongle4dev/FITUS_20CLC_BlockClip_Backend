@@ -154,11 +154,14 @@ router.get("/",
       let offset = requestUtil.getOffset(req.query);
       let orderBy = requestUtil.getSortBy(req.query, "+id");
       let user = requestUtil.getKeyword(req.query, "user") || req.userWallet;
+      let username = requestUtil.getKeyword(req.query, "username");
+      let lastMessage = requestUtil.getKeyword(req.query, "lastMessage");
+
       // let user = requestUtil.getKeyword(req.query, "user");
 
 
       let chats = await chatServiceInstance.getChats({
-        user, limit, offset, orderBy
+        user, username, lastMessage, limit, offset, orderBy
       });
 
       if (chats) {
