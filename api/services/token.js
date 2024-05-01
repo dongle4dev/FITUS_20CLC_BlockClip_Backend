@@ -299,7 +299,7 @@ class TokenService {
 
   async createToken(params) {
     try {
-      let { creator, owner, title, description, source, collectionID, chainID, contractAddress } = params;
+      let { creator, owner, title, description, source, collectionID, chainID, contractAddress, mode } = params;
       let token = await prisma.tokens.create({
         data: {
           creatorWallet: { connect: { wallet: creator } },
@@ -311,6 +311,7 @@ class TokenService {
           collection: collectionID ? { connect: { collectionID: collectionID } } : null,
           chainID: chainID ? chainID : null,
           contractAddress: contractAddress,
+          mode: mode
         },
       });
       let tempToken = { ...token };

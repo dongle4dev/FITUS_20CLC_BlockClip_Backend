@@ -1,0 +1,51 @@
+{
+    "timeline": {
+        "background": "#000000",
+        "tracks": [
+            {
+                "clips": [
+                    {
+                        "asset": {
+                            "type": "image",
+                            "src": "https://shotstack-assets.s3-ap-southeast-2.amazonaws.com/logos/real-estate-black.png"
+                        },
+                        "start": 0,
+                        "length": 8,
+                        "fit": "none",
+                        "scale": 0.33,
+                        "opacity": 0.5,
+                        "position": "bottomRight",
+                        "offset": {
+                            "x": -0.04,
+                            "y": 0.04
+                        },
+                        "transition": {
+                            "in": "fade",
+                            "out": "fade"
+                        }
+                    }
+                ]
+            },
+            {
+                "clips": [
+                    {
+                        "asset": {
+                            "type": "video",
+                            "src": "https://shotstack-assets.s3-ap-southeast-2.amazonaws.com/footage/home-interior-1.mp4"
+                        },
+                        "start": 0,
+                        "length": 8,
+                        "transition": {
+                            "in": "fade",
+                            "out": "fade"
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    "output": {
+        "format": "mp4",
+        "resolution": "sd"
+    }
+}

@@ -213,6 +213,9 @@ class FriendService {
   async getTokensOfFriends({ wallet, limit, offset, orderBy}) {
     try {
       let where = {
+        mode: {
+          equals: constants.MODE.PUBLIC
+        },
         ownerWallet: {
           wallet: {
             not: wallet

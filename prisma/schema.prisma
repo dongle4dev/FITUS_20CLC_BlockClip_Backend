@@ -44,6 +44,7 @@ model collections {
   contractAddress     String?
   active              Boolean?        @default(true)
   disabled            Boolean?        @default(false)
+  package             Json[]
   createdAt           DateTime        @default(now())
   updatedAt           DateTime        @updatedAt
   creator             users           @relation(fields: [creatorCollection], references: [wallet])
@@ -61,6 +62,7 @@ model tokens {
   title_lowercase     String      
   description         String?
   source              String?
+  mode                Int             @default(0)
   contractAddress     String?
   active              Boolean?        @default(true)
   disabled            Boolean?        @default(false)
@@ -127,3 +129,4 @@ model messages {
   chat                chats           @relation(fields: [chatID], references: [id])
   sender              users           @relation(fields: [senderID], references: [wallet])
 }
+

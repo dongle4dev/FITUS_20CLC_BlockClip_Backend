@@ -12,8 +12,10 @@ const pinata = new pinataSDK(config.PINATA_API_KEY, config.PINATA_API_SECRET);
 
 class CollectionService {
   async createCollection(params) {
-    let { title, description, creatorCollection, chainID, contractAddress, paymentType, category, bannerURL } = params;
+    let { title, description, creatorCollection, chainID, contractAddress, paymentType, category, bannerURL, package: packageData } = params;
+    console.log(params);
     try {
+      // packageData.forEach(pkg => delete pkg.privilege);
       let collection = await prisma.collections.create({
         data: {
           title: title,
@@ -21,10 +23,11 @@ class CollectionService {
           creator: { connect: { wallet: creatorCollection } },
           chainID: chainID,
           contractAddress: contractAddress,
-          paymentType: paymentType,
+          paymentType: paymentType ? paymentType : null,
           category: category,
           title_lowercase: title.toLowerCase(),
           bannerURL: bannerURL,
+          package: packageData,
         },
       });
       let tempCol = { ...collection };
@@ -118,6 +121,22 @@ class CollectionService {
 
       //   collection.averagePrice = aggregations._avg
       // })
+
+      await collections.forEach(async (collection) => {
+        // calculate average price of a collection with active tokens
+        let where = {
+          collectionID: collection.collectionID,
+          active: true,
+        };
+        const tokens = await prisma.tokens.findMany({ where });
+        const count = await prisma.collections.count({ where });
+        let avg = 0;
+        tokens.forEach((token) => {
+          avg += token.price;
+        });
+
+        collection.averagePrice = avg / count;
+      });
 
       return {
         collections,
@@ -346,9 +365,11 @@ class CollectionService {
     try {
       let current = await this.getCollectionByID(params);
       let { collectionID: current_collectionID, title: current_title, description: current_description, bannerURL: current_bannerURL,
-        active: current_active, disabled: current_disabled, averagePrice: current_averagePrice, totalViews: current_totalViews } = current;
+        active: current_active, disabled: current_disabled, averagePrice: current_averagePrice, totalViews: current_totalViews, package: current_package } = current;
       let { collectionID: params_collectionID, title: params_title, description: params_description, bannerURL: params_bannerURL,
-        active: params_active, disabled: params_disabled, averagePrice: params_averagePrice, totalViews: params_totalViews } = params;
+        active: params_active, disabled: params_disabled, averagePrice: params_averagePrice, totalViews: params_totalViews, package: params_package } = params;
+
+      // params_package.forEach(pkg => delete pkg.privilege);
 
       let collection = await prisma.collections.update({
         where: { id: current.id },
@@ -364,6 +385,7 @@ class CollectionService {
           disabled: params_disabled !== undefined ? params_disabled : current_disabled,
           averagePrice: params_averagePrice ? params_averagePrice : current_averagePrice,
           totalViews: params_totalViews ? params_totalViews : current_totalViews,
+          package: params_package ? params.package : current_package
         },
       });
 
@@ -391,9 +413,13 @@ class CollectionService {
     try {
       let current = await this.getCollectionByCollectionID(params);
       let { collectionID: current_collectionID, title: current_title, description: current_description, bannerURL: current_bannerURL,
-        active: current_active, disabled: current_disabled, averagePrice: current_averagePrice, totalViews: current_totalViews } = current;
+        active: current_active, disabled: current_disabled, averagePrice: current_averagePrice, totalViews: current_totalViews, package: current_package } = current;
       let { collectionID: params_collectionID, title: params_title, description: params_description, bannerURL: params_bannerURL,
-        active: params_active, disabled: params_disabled, averagePrice: params_averagePrice, totalViews: params_totalViews } = params;
+        active: params_active, disabled: params_disabled, averagePrice: params_averagePrice, totalViews: params_totalViews, package: params_package } = params;
+
+      params_package.forEach(pkg => delete pkg.privilege);
+
+      console.log(params_package);
 
       let collection = await prisma.collections.update({
         where: { id: current.id },
@@ -409,6 +435,7 @@ class CollectionService {
           disabled: params_disabled !== undefined ? params_disabled : current_disabled,
           averagePrice: params_averagePrice ? params_averagePrice : current_averagePrice,
           totalViews: params_totalViews ? params_totalViews : current_totalViews,
+          package: params_package ? params.package : current_package
         },
       });
 

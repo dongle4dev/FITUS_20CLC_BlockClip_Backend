@@ -54,8 +54,9 @@ router.post(
       if (collectionExists.length !== 0) {
         return res
           .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
-          .json({ message: constants.MESSAGES.INPUT_VALIDATION_ERROR });
+          .json({ message: 'Title of collection is already existed.' });
       }
+
 
       let collection = await collectionServiceInstance.createCollection(
         req.body
@@ -321,7 +322,7 @@ router.patch(
       if (collectionExists.length === 0) {
         return res
           .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
-          .json({ message: "collection doesnt exists" });
+          .json({ message: "collection does not exists" });
       }
 
       let collection = await collectionServiceInstance.viewCollection(

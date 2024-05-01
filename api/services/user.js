@@ -488,6 +488,146 @@ class UserService {
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
     }
   }
+
+  // get notifications of a user by type, limit, offset
+  async getNotifications(params) {
+    try {
+      let { userWallet, limit, offset, type} = params;
+
+      console.log(userWallet, limit, offset, type)
+
+      let where = {
+        wallet: {
+          equals: userWallet, 
+        },
+        type: {
+          equals: type
+        }
+      }
+
+      let notification = await prisma.notifications.findMany({ 
+        where,
+        take: limit,
+        skip: offset,
+      });
+
+      return notification;
+    } catch (err) {
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+
+  // User subscribe a collection
+  async subscribeCollection(params) {
+    try {
+      let { userWallet, chainID, collectionID, paymentType, packageType, status, price, seller} = params
+
+      let marketPackage = await prisma.marketpackages.create({
+        data: {
+          subscriber: { connect: { wallet: userWallet } },
+          chainID: chainID,
+          collectionID: collectionID,
+          paymentType: paymentType,
+          packageType: packageType,
+          status: status,
+          price: price,
+          seller: seller
+        }
+      })
+
+      return marketPackage;
+
+    } catch (err) {
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // Check expire of a subscriber
+  async checkExpire(userWallet) {
+    try {
+
+      let currentDate = new Date();
+      let timeExpired;
+      
+      let marketPackages = await prisma.marketpackages.findMany({
+        where: {
+          subscriber: {
+            equals: userWallet
+          }
+        }
+      })
+
+      marketPackages.forEach((pkg) => {
+        if (pkg.packageType === 1) {
+          // time Expired is 30 day
+          timeExpired = 30;
+        } else if (pkg.packageType === 2)  {
+          // time Expired is 90 day
+          timeExpired = 90;
+        }
+        else {
+          // time Expired is 365 day
+          timeExpired = 365;
+        }  
+
+        if (pkg.createdAt < currentDate + timeExpired) {
+          pkg.update({
+            status: 2
+          })
+        }
+      })
+
+    } catch (err) {
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  // get all subscribe of a user
+  async getSubscriber(params) {
+    try {
+      let { userWallet} = params
+
+      await checkExpire(userWallet)
+
+      let marketPackages = await prisma.marketpackages.findMany({
+        where: {
+          subscriber: {
+            equals: userWallet
+          }
+        }
+      })
+
+      return marketPackages;
+    } catch (err) {
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getSubscriberByID(params) {
+    try {
+      let { userWallet, ID} = params
+
+      await checkExpire(userWallet)
+
+      let marketPackages = await prisma.marketpackages.findMany({
+        where: {
+          subscriber: {
+            equals: userWallet
+          },
+          id: {
+            equals: ID
+          },
+        }
+      })
+
+      return marketPackages;
+    } catch (err) {
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
 }
+
 
 module.exports = UserService;

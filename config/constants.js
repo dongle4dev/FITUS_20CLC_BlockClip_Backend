@@ -1,4 +1,4 @@
-let config = require('./config')
+let config = require("./config");
 
 module.exports = {
   PAGINATION_MAX_LIMIT: 50,
@@ -16,7 +16,7 @@ module.exports = {
     ERROR: "error",
     AUTH_ERROR: "auth_error",
     NOT_FOUND: "not found",
-    ORDER_EXPIRED: "order expired"
+    ORDER_EXPIRED: "order expired",
   },
   RESPONSE_STATUS_CODES: {
     OK: 200,
@@ -24,7 +24,7 @@ module.exports = {
     UNAUTHORIZED: 401,
     NOT_FOUND: 204,
     INTERNAL_SERVER_ERROR: 500,
-    ORDER_EXPIRED: 202
+    ORDER_EXPIRED: 202,
   },
   SORT_DIRECTION: {
     ASC: "asc",
@@ -36,7 +36,7 @@ module.exports = {
     LOGIN_SUCCESS: "Login Success",
     UNAUTHORIZED: "Unauthorized access",
     INPUT_VALIDATION_ERROR: "Input Validation Error",
-    INVALID_REQUEST: "Invalid Request"
+    INVALID_REQUEST: "Invalid Request",
   },
   ORDER_TYPES: {
     FIXED: "FIXED",
@@ -55,6 +55,15 @@ module.exports = {
   },
   TOKEN_TYPES: {
     ERC1155: "ERC1155",
-    ERC721: "ERC721"
-  }
+    ERC721: "ERC721",
+  },
+  PACKAGE_TYPE: {
+    DAYS_30: 1,
+    DAYS_90: 2,
+    A_YEAR: 3,
+  },
+  MODE: {
+    PUBLIC: "1",
+    COMMERCIAL: "2",
+  },
 };
