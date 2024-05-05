@@ -18,6 +18,8 @@ model users {
   active        Boolean?        @default(true)
   seller_marketorders  marketorders[]   @relation("seller_marketorders")
   buyer_marketorders   marketorders[]     @relation("buyer_marketorders")
+  seller_marketpackages  marketpackages[]   @relation("seller_marketpackages")
+  subscriber_marketpackages   marketpackages[]     @relation("subscriber_marketpackages")
   from_friends  friends[]       @relation("from_friends")
   to_friends    friends[]       @relation("to_friends")
   collections   collections[]
@@ -30,9 +32,9 @@ model users {
 
 model collections {
   id                  String          @id @default(auto()) @map("_id") @db.ObjectId
-  collectionID        String?         @unique
   creatorCollection   String          
   chainID             String
+  collectionID        String?         @unique
   title               String
   title_lowercase     String      
   description         String?
@@ -49,6 +51,7 @@ model collections {
   updatedAt           DateTime        @updatedAt
   creator             users           @relation(fields: [creatorCollection], references: [wallet])
   tokens              tokens[]
+  marketpackages        marketpackages[]
 }
 
 model tokens {
@@ -95,6 +98,25 @@ model marketorders {
   sellerWallet        users           @relation("seller_marketorders", fields: [seller], references: [wallet])
   tokens              tokens          @relation(fields: [tokenID], references: [tokenID])
 }
+
+model marketpackages {
+  id                  String          @id @default(auto()) @map("_id") @db.ObjectId
+  chainID             String
+  collectionID        String
+  paymentType         String
+  packageType         Int
+  status              Int          
+  price               Float
+  seller              String  
+  subscriber          String
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  subscriberWallet    users           @relation("subscriber_marketpackages", fields: [subscriber], references: [wallet])
+  sellerWallet        users           @relation("seller_marketpackages", fields: [seller], references: [wallet])
+  collection          collections     @relation(fields: [collectionID], references: [collectionID])
+}
+
+
 
 model friends {
   id                  String          @id @default(auto()) @map("_id") @db.ObjectId
