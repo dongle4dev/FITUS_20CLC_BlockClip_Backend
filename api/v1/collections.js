@@ -362,7 +362,7 @@ router.put(
           .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
           .json({ message: constants.MESSAGES.INPUT_VALIDATION_ERROR });
       }
-
+      
       let collectionExists = await collectionServiceInstance.getCollectionByCollectionID(params);
 
       if (!collectionExists) {

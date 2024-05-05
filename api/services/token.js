@@ -315,10 +315,14 @@ class TokenService {
         },
       });
       let tempToken = { ...token };
-      delete tempToken.id, tempToken.tokenID,
-        delete tempToken.active, delete tempToken.disabled,
-        delete tempToken.updatedAt, delete tempToken.createdAt;
+
+      delete tempToken.id, delete tempToken.active, delete tempToken.disabled;
+      delete tempToken.updatedAt, delete tempToken.createdAt;
+      delete tempToken.title_lowercase, delete tempToken.tokenID;
       delete tempToken.listOfLikedUsers, delete tempToken.listOfFavoriteUsers;
+      delete tempToken.totalViews, delete tempToken.collectionID;
+      delete tempToken.totalShares;
+      
       const res = await pinata.pinJSONToIPFS(tempToken);
 
       return { token, tokenURI: `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}` };
@@ -559,7 +563,8 @@ class TokenService {
         delete tempToken.updatedAt, delete tempToken.createdAt;
         delete tempToken.title_lowercase, delete tempToken.tokenID;
         delete tempToken.listOfLikedUsers, delete tempToken.listOfFavoriteUsers;
-        delete tempToken.totalViews;
+        delete tempToken.totalViews, delete tempToken.collectionID;
+        delete tempToken.totalShares;
         const res = await pinata.pinJSONToIPFS(tempToken);
         if (params.tokenURI) {
           const res2 = await pinata.unpin(params.tokenURI.split('/')[4]);
@@ -581,12 +586,12 @@ class TokenService {
       let { description: params_description, source: params_source,
         title: params_title, active: params_active, disabled: params_disabled,
         tokenID: params_tokenID, contractAddress: params_contractAddress,
-        owner: params_owner,
+        owner: params_owner, collectionID: params_collectionID,
       } = params;
       let { description: current_description, source: current_source,
         title: current_title, active: current_active, disabled: current_disabled,
         tokenID: current_tokenID, contractAddress: current_contractAddress,
-        owner: current_owner
+        owner: current_owner, collectionID: current_collectionID
       } = current;
       let token = await prisma.tokens.update({
         where: {
@@ -614,17 +619,24 @@ class TokenService {
           } : {
             connect: { wallet: current_owner }
           },
+          collection: params_collectionID ? {
+            connect: { collectionID: params_collectionID }
+          } : {
+            connect: { collectionID: current_collectionID }
+          },
         },
       });
 
       if (params_description || params_title ||
-        params_source || params_contractAddress || params_owner) {
+        params_source || params_contractAddress || 
+        params_owner) {
         let tempToken = { ...token };
         delete tempToken.id, delete tempToken.active, delete tempToken.disabled;
         delete tempToken.updatedAt, delete tempToken.createdAt;
         delete tempToken.title_lowercase, delete tempToken.tokenID;
         delete tempToken.listOfLikedUsers, delete tempToken.listOfFavoriteUsers;
-        delete tempToken.totalViews;
+        delete tempToken.totalViews, delete tempToken.collectionID;
+        delete tempToken.totalShares;
         const res = await pinata.pinJSONToIPFS(tempToken);
         if (params.tokenURI) {
           const res2 = await pinata.unpin(params.tokenURI.split('/')[4]);

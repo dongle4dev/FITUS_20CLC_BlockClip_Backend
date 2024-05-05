@@ -365,8 +365,7 @@ router.post("/file", verifyToken, async (req, res) => {
 });
 
 router.post("/license", verifyToken, async (req, res) => {
-  try {
-
+  try { 
     let tokenID = req.body.tokenID;
     var algorithm = "aes256";
     let owner = "";

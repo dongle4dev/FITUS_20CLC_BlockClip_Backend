@@ -1,0 +1,20 @@
+delete tempToken.id, delete tempToken.active, delete tempToken.disabled;
+        delete tempToken.updatedAt, delete tempToken.createdAt;
+        delete tempToken.title_lowercase, delete tempToken.tokenID;
+        delete tempToken.listOfLikedUsers, delete tempToken.listOfFavoriteUsers;
+        delete tempToken.totalViews, delete tempToken.collectionID;
+        delete tempToken.totalShares;
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# On branch master
+# Your branch is up to date with 'origin/master'.
+#
+# Changes to be committed:
+#	modified:   ../api/services/collection.js
+#	modified:   ../api/services/market-order.js
+#	modified:   ../api/services/token.js
+#	modified:   ../api/v1/collections.js
+#	modified:   ../api/v1/tokens.js
+#	modified:   ../config/constants.js
+#

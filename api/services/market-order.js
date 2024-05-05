@@ -367,7 +367,7 @@ class MarketOrderService {
       let { price: current_price, status: current_status,
         buyer: current_buyer } = current;
       let { price: params_price, status: params_status,
-        buyer: params_buyer, tokenURI: params_tokenURI } = params;
+        buyer: params_buyer, tokenURI: params_tokenURI, collectionID: params_collectionID } = params;
 
       if (parseInt(params_status) === 0) {
         console.log(params_status)
@@ -384,7 +384,8 @@ class MarketOrderService {
         let token = await tokenServiceInstance.updateTokenByTokenID({
           tokenID: current.tokenID,
           owner: params_buyer,
-          tokenURI: params_tokenURI
+          tokenURI: params_tokenURI,
+          collectionID: params_collectionID
         })
 
         return { order, token: token.token, tokenURI: token.tokenURI };

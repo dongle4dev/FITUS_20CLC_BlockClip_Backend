@@ -63,7 +63,7 @@ module.exports = {
     A_YEAR: 3,
   },
   MODE: {
-    PUBLIC: "1",
-    COMMERCIAL: "2",
+    PUBLIC: 1,
+    COMMERCIAL: 2,
   },
 };
