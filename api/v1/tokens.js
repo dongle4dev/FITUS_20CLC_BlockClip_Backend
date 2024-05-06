@@ -334,7 +334,7 @@ router.post(
   }
 );
 
-router.post("/file", verifyToken, async (req, res) => {
+router.get("/file", verifyToken, async (req, res) => {
   try {
     let tokenID = req.body.tokenID;
     
@@ -364,14 +364,12 @@ router.post("/file", verifyToken, async (req, res) => {
   }
 });
 
-router.post("/license", verifyToken, async (req, res) => {
+router.get("/license", verifyToken, async (req, res) => {
   try { 
     let tokenID = req.body.tokenID;
     var algorithm = "aes256";
     let owner = "";
 
-    console.log(title)
-    
     const token = await prisma.tokens.findUnique({
       where: {
         tokenID: tokenID,

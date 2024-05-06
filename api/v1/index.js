@@ -9,6 +9,7 @@ const tokens = require("./tokens");
 const friends = require("./friends");
 const chats = require("./chats");
 const messages = require("./messages");
+const packages = require("./packages");
 const path = require("path");
 
 /**
@@ -27,5 +28,6 @@ router.use("/orders", orders);
 router.use("/friends", friends);
 router.use("/chats", chats);
 router.use("/messages", messages);
+router.use("/packages", packages);
 
 module.exports = router;
