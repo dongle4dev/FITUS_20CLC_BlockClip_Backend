@@ -150,7 +150,15 @@ class PackageService {
       }
       else if (collectionID) 
       {
-        return await this.getPackageType({ userWallet, collectionID });
+        where = {
+          subscriber: {
+            equals: userWallet,
+          },
+          collectionID: {
+            equals: collectionID,
+          },
+          status: 1
+        };
       }
       else {
         where = {

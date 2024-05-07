@@ -9,6 +9,8 @@ const constants = require("../../config/constants");
 const verifyToken = require("../middlewares/verify-token");
 const packageService = require("../services/package");
 let packageServiceInstance = new packageService();
+const collectionService = require("../services/collection");
+let collectionServiceInstance = new collectionService();
 
 // user Subscrible to a collection
 // Done
@@ -16,7 +18,14 @@ let packageServiceInstance = new packageService();
 router.post("/", verifyToken, async (req, res) => {
   try {
     let params = { userWallet: req.userWallet, ...req.body };
-    console.log(req.body);
+
+    let collectionExists = await collectionServiceInstance.getCollectionByCollectionID(params);
+
+      if (!collectionExists) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: "collection doesnt exists" });
+      }
 
     let check = await packageServiceInstance.subscribeCollection(params);
 
@@ -84,6 +93,17 @@ router.get("/", verifyToken, async (req, res) => {
     let orderBy = requestUtil.getSortBy(req.query, "+id");
     let id = requestUtil.getKeyword(req.query, "id");
     let collectionID = requestUtil.getKeyword(req.query, "collectionID");
+
+    if (collectionID) {
+      let collectionExists = await collectionServiceInstance.getCollectionByCollectionID({collectionID: collectionID});
+
+      if (!collectionExists) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: "collection doesnt exists" });
+      }
+    }
+    
 
     await packageServiceInstance.checkExpire({ userWallet: req.userWallet });
 
