@@ -74,7 +74,6 @@ class PackageService {
         }
       });
     } catch (err) {
-      console.log(err);
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
     }
   }
@@ -225,9 +224,7 @@ class PackageService {
         };
       }
       else 
-        return {
-          "packageType": 0
-        };
+        return "No packages found.";
       
     } catch (err) {
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
