@@ -22,7 +22,8 @@ const {
   generatePresignedUrl,
   downloadEncryptedFileFromS3,
   isFileExist,
-  getKeyKMS
+  getKeyKMS,
+  updateKeyName,
 } = require("../utils/serviceAWS");
 const VideoEncryptor = require("video-encryptor");
 const prisma = require("../../prisma");
@@ -249,9 +250,18 @@ router.post(
           .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
           .json({ message: constants.MESSAGES.INPUT_VALIDATION_ERROR });
       }
-      
+
       let token = await tokenServiceInstance.createToken(req.body);
       if (token) {
+        const key = await getKeyKMS(token.token.creator);
+        if (key) {
+          updateKeyName(token.token.creator, token.token.id, key);
+        } else {
+          return res
+            .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+            .json({ message: constants.RESPONSE_STATUS.FAILURE });
+        }
+
         return res
           .status(constants.RESPONSE_STATUS_CODES.OK)
           .json({ message: constants.RESPONSE_STATUS.SUCCESS, data: token });
@@ -282,6 +292,7 @@ router.post(
     try {
       let mode = req.query.mode;
       let wallet = req.userWallet;
+      console.log(wallet);
       let inputVideo = `public/${req.file.filename}`;
       let outputVideo = inputVideo.replace(".mp4", "_output.mp4");
       let outputEncode = inputVideo.replace(".mp4", "_encoded.mp4");
@@ -290,20 +301,23 @@ router.post(
       let source;
 
       // ?mode=public || ?mode=commercial
-      if (mode === constants.MODE.PUBLIC || mode === constants.MODE.COMMERCIAL ) {
+      if (
+        parseInt(mode) === constants.MODE.PUBLIC || parseInt(mode) === constants.MODE.COMMERCIAL
+      ) {
         // Flow: Upload original video
         await uploadVideo(inputVideo, inputVideo);
 
         await watermarkVideo(inputVideo, outputVideo);
         await encodeLSB(outputVideo, outputEncode, wallet);
 
-        if (mode === constants.MODE.PUBLIC) {
+        if (parseInt(mode) === constants.MODE.PUBLIC) {
           // Flow: Watermark -> Embed wallet address -> upload
           source = await tokenServiceInstance.uploadVideoToIPFS(outputEncode);
           await deleteTempVideo(outputEncode);
-        } else if (mode === constants.MODE.COMMERCIAL) {
+        } else if (parseInt(mode) === constants.MODE.COMMERCIAL) {
           // Create symmetric key
-          let keyId = await createSymmetricKey("KeyName");
+          let keyId = await createSymmetricKey(wallet);
+          // let keyId = "86141fed-e532-4681-962f-f0cd566aff74"
 
           // Flow: Watermark -> Embed wallet address -> upload
           await videoEncryptor.encryptVideo(outputEncode, keyId, outputEncrypt);
@@ -337,13 +351,13 @@ router.post(
 router.get("/file", verifyToken, async (req, res) => {
   try {
     let tokenID = req.body.tokenID;
-    
+
     console.log(tokenID);
 
     const token = await prisma.tokens.findUnique({
       where: {
         tokenID: tokenID,
-      }, 
+      },
     });
 
     if (token) {
@@ -365,7 +379,7 @@ router.get("/file", verifyToken, async (req, res) => {
 });
 
 router.get("/license", verifyToken, async (req, res) => {
-  try { 
+  try {
     let tokenID = req.body.tokenID;
     var algorithm = "aes256";
     let owner = "";
@@ -379,23 +393,24 @@ router.get("/license", verifyToken, async (req, res) => {
     if (token) {
       // Get JWT from header
       let jwt = req.headers.authorization.split(" ")[1];
-      console.log(jwt)
+      console.log(jwt);
 
       // Get the key from KMS
       let key = await getKeyKMS(token.contractAddress);
-      console.log(key)
+      console.log(key);
       let cipher = crypto.createCipher(algorithm, jwt);
       var encryptedKey =
-        await cipher.update(key, "utf8", "hex") + cipher.final("hex");
+        (await cipher.update(key, "utf8", "hex")) + cipher.final("hex");
 
       console.log(encryptedKey);
 
       // to decrypt
       var decipher = crypto.createDecipher(algorithm, jwt);
       var decryptedKey =
-        await decipher.update(encryptedKey, "hex", "utf8") + decipher.final("utf8");
-      
-      console.log(decryptedKey)
+        (await decipher.update(encryptedKey, "hex", "utf8")) +
+        decipher.final("utf8");
+
+      console.log(decryptedKey);
 
       return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
         message: constants.RESPONSE_STATUS.SUCCESS,

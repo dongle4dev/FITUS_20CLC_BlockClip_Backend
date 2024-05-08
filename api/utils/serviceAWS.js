@@ -1,4 +1,5 @@
 require("dotenv").config(); // Load environment variables from .env file
+let constants = require("../../config/constants");
 
 const {
   S3Client,
@@ -12,6 +13,8 @@ const {
   CreateKeyCommand,
   DescribeKeyCommand,
   CreateAliasCommand,
+  UpdateAliasCommand,
+  DeleteAliasCommand,
 } = require("@aws-sdk/client-kms");
 
 const { getSignedUrl } = require("@aws-sdk/s3-request-presigner");
@@ -65,7 +68,7 @@ async function createSymmetricKey(aliasName) {
 
     return keyId;
   } catch (error) {
-    console.error("Error creating symmetric KMS key:", error);
+    throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
   }
 }
 
@@ -86,7 +89,7 @@ const uploadVideo = async (videoFilePath, aliasName) => {
     const command = new PutObjectCommand(params);
     await s3.send(command);
   } catch (err) {
-    console.error("Error uploading video:", err);
+    throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
   }
 };
 
@@ -108,7 +111,7 @@ const uploadVideoWithSSE = async (videoFilePath, aliasName, kmsKeyId) => {
     const command = new PutObjectCommand(params);
     await s3.send(command);
   } catch (err) {
-    console.error("Error uploading video:", err);
+    throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
   }
 };
 
@@ -163,10 +166,8 @@ async function downloadEncryptedFileFromS3(aliasName, filename) {
       writableStream.on("finish", resolve);
       writableStream.on("error", reject);
     });
-
-    console.log("Encrypted file downloaded successfully.");
   } catch (error) {
-    console.error("Error downloading encrypted file:", error);
+    throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
   }
 }
 
@@ -187,9 +188,38 @@ async function getKeyKMS(keyAlias) {
     } else {
       console.log("Key ID not found.");
     }
-    
   } catch (error) {
-    console.error("Error retrieving key ID:", error);
+    throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+  }
+}
+
+async function updateKeyName(currentKeyAlias, newKeyAlias, keyID) {
+  try {
+    // Define parameters for the UpdateAlias command
+    const updateAliasParams = {
+      AliasName: `alias/${newKeyAlias}`, // The alias name to update
+      TargetKeyId: keyID,
+    };
+
+    deleteKeyAlias(currentKeyAlias)
+
+    console.log("updateAliasParams", updateAliasParams);
+
+    await kmsClient.send(new CreateAliasCommand(updateAliasParams));
+  } catch (error) {
+    throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+  }
+}
+
+async function deleteKeyAlias(aliasName) {
+  try {
+    const params = {
+      AliasName: `alias/${aliasName}`, // The alias name to delete
+    };
+
+    await kmsClient.send(new DeleteAliasCommand(params));
+  } catch (error) {
+    throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
   }
 }
 
@@ -201,4 +231,6 @@ module.exports = {
   downloadEncryptedFileFromS3,
   createSymmetricKey,
   getKeyKMS,
+  updateKeyName,
+  deleteKeyAlias,
 };
