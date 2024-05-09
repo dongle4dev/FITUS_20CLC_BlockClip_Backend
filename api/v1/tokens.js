@@ -251,24 +251,41 @@ router.post(
           .json({ message: constants.MESSAGES.INPUT_VALIDATION_ERROR });
       }
 
-      let token = await tokenServiceInstance.createToken(req.body);
-      if (token) {
-        const key = await getKeyKMS(token.token.creator);
+      if (parseInt(req.body.mode) === constants.MODE.COMMERCIAL) {
+        const key = await getKeyKMS(req.body.creator);
         if (key) {
-          updateKeyName(token.token.creator, token.token.id, key);
+          console.log(key);
+          let token = await tokenServiceInstance.createToken(req.body);
+          await updateKeyName(token.token.creator, token.token.id, key);
+          if (token) {
+            return res
+              .status(constants.RESPONSE_STATUS_CODES.OK)
+              .json({ message: constants.RESPONSE_STATUS.SUCCESS, data: token });
+          } else {
+            return res
+              .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+              .json({ message: constants.RESPONSE_STATUS.FAILURE });
+          }
+        } else {
+          return res
+            .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+            .json({ message: "Key is not exist!" });
+        } 
+     } else if (parseInt(req.body.mode) === constants.MODE.PUBLIC) {
+        let token = await tokenServiceInstance.createToken(req.body);
+        if (token) {
+          return res
+            .status(constants.RESPONSE_STATUS_CODES.OK)
+            .json({ message: constants.RESPONSE_STATUS.SUCCESS, data: token });
         } else {
           return res
             .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
             .json({ message: constants.RESPONSE_STATUS.FAILURE });
         }
-
-        return res
-          .status(constants.RESPONSE_STATUS_CODES.OK)
-          .json({ message: constants.RESPONSE_STATUS.SUCCESS, data: token });
       } else {
         return res
           .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
-          .json({ message: constants.RESPONSE_STATUS.FAILURE });
+          .json({ message: "Mode is not valid!" });
       }
     } catch (err) {
       console.log(err);
@@ -292,7 +309,6 @@ router.post(
     try {
       let mode = req.query.mode;
       let wallet = req.userWallet;
-      console.log(wallet);
       let inputVideo = `public/${req.file.filename}`;
       let outputVideo = inputVideo.replace(".mp4", "_output.mp4");
       let outputEncode = inputVideo.replace(".mp4", "_encoded.mp4");
@@ -316,9 +332,7 @@ router.post(
           await deleteTempVideo(outputEncode);
         } else if (parseInt(mode) === constants.MODE.COMMERCIAL) {
           // Create symmetric key
-          let keyId = await createSymmetricKey(wallet);
-          // let keyId = "86141fed-e532-4681-962f-f0cd566aff74"
-
+          const keyId = await createSymmetricKey(wallet);
           // Flow: Watermark -> Embed wallet address -> upload
           await videoEncryptor.encryptVideo(outputEncode, keyId, outputEncrypt);
           source = await tokenServiceInstance.uploadVideoToIPFS(outputEncrypt);
@@ -393,11 +407,9 @@ router.get("/license", verifyToken, async (req, res) => {
     if (token) {
       // Get JWT from header
       let jwt = req.headers.authorization.split(" ")[1];
-      console.log(jwt);
 
       // Get the key from KMS
-      let key = await getKeyKMS(token.contractAddress);
-      console.log(key);
+      let key = await getKeyKMS(token.id);
       let cipher = crypto.createCipher(algorithm, jwt);
       var encryptedKey =
         (await cipher.update(key, "utf8", "hex")) + cipher.final("hex");

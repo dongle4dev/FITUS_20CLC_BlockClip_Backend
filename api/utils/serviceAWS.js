@@ -48,6 +48,12 @@ const kmsClient = new KMSClient({
 async function createSymmetricKey(aliasName) {
   try {
     // Send a request to create a symmetric KMS key
+    let keyId = await getKeyKMS(aliasName);
+
+    if (keyId) {
+      return keyId;
+    }
+
     const { KeyMetadata } = await kmsClient.send(
       new CreateKeyCommand({
         KeyUsage: "ENCRYPT_DECRYPT", // Specify key usage as 'ENCRYPT_DECRYPT' for symmetric key
@@ -56,7 +62,7 @@ async function createSymmetricKey(aliasName) {
     );
 
     // Retrieve the key ID
-    const keyId = KeyMetadata.KeyId;
+    keyId = KeyMetadata.KeyId;
 
     // Update the alias to point to the newly created key
     await kmsClient.send(
@@ -186,10 +192,10 @@ async function getKeyKMS(keyAlias) {
     if (keyId) {
       return keyId;
     } else {
-      console.log("Key ID not found.");
+      return null;
     }
   } catch (error) {
-    throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    return null;
   }
 }
 
