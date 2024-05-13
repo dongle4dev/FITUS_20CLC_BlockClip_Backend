@@ -251,41 +251,22 @@ router.post(
           .json({ message: constants.MESSAGES.INPUT_VALIDATION_ERROR });
       }
 
-      if (parseInt(req.body.mode) === constants.MODE.COMMERCIAL) {
-        const key = await getKeyKMS(req.body.creator);
+      let token = await tokenServiceInstance.createToken(req.body);
+
+      if (token) {
+        const key =  getKeyKMS(token.creator);
+
         if (key) {
-          console.log(key);
-          let token = await tokenServiceInstance.createToken(req.body);
-          await updateKeyName(token.token.creator, token.token.id, key);
-          if (token) {
-            return res
-              .status(constants.RESPONSE_STATUS_CODES.OK)
-              .json({ message: constants.RESPONSE_STATUS.SUCCESS, data: token });
-          } else {
-            return res
-              .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
-              .json({ message: constants.RESPONSE_STATUS.FAILURE });
-          }
-        } else {
-          return res
-            .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
-            .json({ message: "Key is not exist!" });
-        } 
-     } else if (parseInt(req.body.mode) === constants.MODE.PUBLIC) {
-        let token = await tokenServiceInstance.createToken(req.body);
-        if (token) {
-          return res
-            .status(constants.RESPONSE_STATUS_CODES.OK)
-            .json({ message: constants.RESPONSE_STATUS.SUCCESS, data: token });
-        } else {
-          return res
-            .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
-            .json({ message: constants.RESPONSE_STATUS.FAILURE });
+          updateKeyName(token.creator, token.id);
         }
+
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.OK)
+          .json({ message: constants.RESPONSE_STATUS.SUCCESS, data: token });
       } else {
         return res
           .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
-          .json({ message: "Mode is not valid!" });
+          .json({ message: constants.RESPONSE_STATUS.FAILURE });
       }
     } catch (err) {
       console.log(err);
@@ -317,9 +298,7 @@ router.post(
       let source;
 
       // ?mode=public || ?mode=commercial
-      if (
-        parseInt(mode) === constants.MODE.PUBLIC || parseInt(mode) === constants.MODE.COMMERCIAL
-      ) {
+      if (parseInt(mode) === constants.MODE.PUBLIC || parseInt(mode)  === constants.MODE.COMMERCIAL ) {
         // Flow: Upload original video
         await uploadVideo(inputVideo, inputVideo);
 
@@ -332,7 +311,9 @@ router.post(
           await deleteTempVideo(outputEncode);
         } else if (parseInt(mode) === constants.MODE.COMMERCIAL) {
           // Create symmetric key
-          const keyId = await createSymmetricKey(wallet);
+          let keyId = await createSymmetricKey(wallet);
+          // let keyId = "86141fed-e532-4681-962f-f0cd566aff74"
+
           // Flow: Watermark -> Embed wallet address -> upload
           await videoEncryptor.encryptVideo(outputEncode, keyId, outputEncrypt);
           source = await tokenServiceInstance.uploadVideoToIPFS(outputEncrypt);
@@ -365,13 +346,13 @@ router.post(
 router.get("/file", verifyToken, async (req, res) => {
   try {
     let tokenID = req.body.tokenID;
-
+    
     console.log(tokenID);
 
     const token = await prisma.tokens.findUnique({
       where: {
         tokenID: tokenID,
-      },
+      }, 
     });
 
     if (token) {
@@ -392,12 +373,12 @@ router.get("/file", verifyToken, async (req, res) => {
   }
 });
 
-router.get("/license", verifyToken, async (req, res) => {
+router.post("/license", verifyToken, async (req, res) => {
   try {
     let tokenID = req.body.tokenID;
     var algorithm = "aes256";
     let owner = "";
-
+    
     const token = await prisma.tokens.findUnique({
       where: {
         tokenID: tokenID,
@@ -407,22 +388,23 @@ router.get("/license", verifyToken, async (req, res) => {
     if (token) {
       // Get JWT from header
       let jwt = req.headers.authorization.split(" ")[1];
+      console.log(jwt)
 
       // Get the key from KMS
-      let key = await getKeyKMS(token.id);
+      let key = await getKeyKMS(token.contractAddress);
+      console.log(key)
       let cipher = crypto.createCipher(algorithm, jwt);
       var encryptedKey =
-        (await cipher.update(key, "utf8", "hex")) + cipher.final("hex");
+        await cipher.update(key, "utf8", "hex") + cipher.final("hex");
 
       console.log(encryptedKey);
 
       // to decrypt
       var decipher = crypto.createDecipher(algorithm, jwt);
       var decryptedKey =
-        (await decipher.update(encryptedKey, "hex", "utf8")) +
-        decipher.final("utf8");
-
-      console.log(decryptedKey);
+        await decipher.update(encryptedKey, "hex", "utf8") + decipher.final("utf8");
+      
+      console.log(decryptedKey)
 
       return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
         message: constants.RESPONSE_STATUS.SUCCESS,
