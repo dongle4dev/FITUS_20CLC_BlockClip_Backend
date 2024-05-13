@@ -208,6 +208,27 @@ class PackageService {
     }
   }
 
+  async getSubscriberByCollectionID(params) {
+    try {
+      let { userWallet, collectionID } = params;
+
+      let marketPackages = await prisma.marketpackages.findMany({
+        where: {
+          subscriber: {
+            equals: userWallet,
+          },
+          collectionID: {
+            equals: collectionID,
+          },
+          status: 1
+        },
+      });
+      return marketPackages;
+    } catch (err) {
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   async getPackageType(params) {
     try {
       let { userWallet, collectionID } = params;
@@ -219,6 +240,7 @@ class PackageService {
           collectionID: {
             equals: collectionID,
           },
+          status: 1
         },
         orderBy: {
           createdAt: "desc",
