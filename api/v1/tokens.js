@@ -30,6 +30,7 @@ const prisma = require("../../prisma");
 const { title } = require("process");
 const packageService = require("../services/package");
 const packageServiceInstance = new packageService();
+const axios = require("axios");
 
 /**
  * Token routes
@@ -260,9 +261,10 @@ router.post(
           let token = await tokenServiceInstance.createToken(req.body);
           await updateKeyName(token.token.creator, token.token.id, key);
           if (token) {
-            return res
-              .status(constants.RESPONSE_STATUS_CODES.OK)
-              .json({ message: constants.RESPONSE_STATUS.SUCCESS, data: token });
+            return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
+              message: constants.RESPONSE_STATUS.SUCCESS,
+              data: token,
+            });
           } else {
             return res
               .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
@@ -272,8 +274,8 @@ router.post(
           return res
             .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
             .json({ message: "Key is not exist!" });
-        } 
-     } else if (parseInt(req.body.mode) === constants.MODE.PUBLIC) {
+        }
+      } else if (parseInt(req.body.mode) === constants.MODE.PUBLIC) {
         let token = await tokenServiceInstance.createToken(req.body);
         if (token) {
           return res
@@ -320,7 +322,8 @@ router.post(
 
       // ?mode=public || ?mode=commercial
       if (
-        parseInt(mode) === constants.MODE.PUBLIC || parseInt(mode) === constants.MODE.COMMERCIAL
+        parseInt(mode) === constants.MODE.PUBLIC ||
+        parseInt(mode) === constants.MODE.COMMERCIAL
       ) {
         // Flow: Upload original video
         await uploadVideo(inputVideo, inputVideo);
@@ -377,10 +380,21 @@ router.get("/file", verifyToken, async (req, res) => {
     });
 
     if (token) {
-      return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
-        message: constants.RESPONSE_STATUS.SUCCESS,
-        data: token.source,
+      const response = await axios.get(token.source, {
+        responseType: "arraybuffer",
       });
+
+      const videoData = response.data;
+
+      if (videoData) 
+        return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
+          message: constants.RESPONSE_STATUS.SUCCESS,
+          data: videoData,
+        });
+      else {
+        return res.status(constants.RESPONSE_STATUS_CODES.OK)
+        .json({ message: "No video source!" });
+      }
     } else {
       return res
         .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
