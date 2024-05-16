@@ -432,7 +432,7 @@ router.post("/license", verifyToken, async (req, res) => {
           collectionID: token.collectionID,
         });
       console.log(marketPackage);
-      if (marketPackage) {
+      if (marketPackage[0]) {
         // Get JWT from header
         let jwt = req.headers.authorization.split(" ")[1];
         console.log(jwt);

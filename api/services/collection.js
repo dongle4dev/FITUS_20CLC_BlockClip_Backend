@@ -42,104 +42,96 @@ class CollectionService {
     }
   }
 
+  async updateCollectionAvgPrice(paginatedCollections) {
+    try {
+      for (const collection of paginatedCollections) {
+        const tokens = await prisma.tokens.findMany({
+          where: {
+            collectionID: collection.collectionID,
+            active: true,
+          },
+        });
+  
+        const totalPrices = tokens.reduce((sum, token) => sum + token.price, 0);
+        const avgPrice = tokens.length ? totalPrices / tokens.length : 0;
+  
+        collection.averagePrice = avgPrice;
+  
+        // Update the collection in the database
+        await prisma.collections.update({
+          where: { collectionID: collection.collectionID },
+          data: { averagePrice: avgPrice },
+        });
+      }
+  
+      return paginatedCollections;
+    }
+    catch (err) {
+      console.log(err);
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   async getCollections({ limit, offset, orderBy, chainID, title, creatorCollection, category, active }) {
     try {
-      let where;
-      let count = 0;
-      if (creatorCollection !== "" || category !== "" || active !== "") {
-        if (active !== "") {
-          where = {
-            disabled: false,
-            chainID: chainID,
-            OR: [
-              {
-                title: {
-                  contains: title,
-                }
-              },
-              {
-                title_lowercase: {
-                  contains: title,
-                }
-              },
-            ],
-            creatorCollection: {
-              contains: creatorCollection
+      let where = {
+        disabled: false,
+        chainID: chainID,
+        OR: [
+          {
+            title: {
+              contains: title,
             },
-            category: {
-              contains: category
+          },
+          {
+            title_lowercase: {
+              contains: title,
             },
-            active: active == 'true'
-          };
-        } else {
-          where = {
-            disabled: false,
-            chainID: chainID,
-            OR: [
-              {
-                title: {
-                  contains: title,
-                }
-              },
-              {
-                title_lowercase: {
-                  contains: title,
-                }
-              },
-            ],
-            creatorCollection: {
-              contains: creatorCollection
-            },
-            category: {
-              contains: category
-            }
-          };
-        }
-        count = await prisma.collections.count({ where });
-      } else {
-        count = await prisma.collections.count({ where: { disabled: false, chainID: chainID } });
+          },
+        ],
+        creatorCollection: {
+          contains: creatorCollection,
+        },
+        category: {
+          contains: category,
+        },
+      };
+  
+      if (active !== "") {
+        where.active = active === 'true';
       }
+  
+      let count = await prisma.collections.count({ where });
+  
       let collections = await prisma.collections.findMany({
         where,
-        orderBy,
-        take: limit,
-        skip: offset
+        include: {
+          _count: {
+            select: { marketpackages: true },
+          },
+        },
+        orderBy : orderBy.totalSubscribers ? {} : orderBy,
       });
-
-      // await collections.forEach(async (collection) => {
-      //   const aggregations = await prisma.marketorders.aggregate({
-      //     _avg: {
-      //       price: true,
-      //     },
-      //     where: {
-      //       tokens: {
-      //         collectionID: collection.collectionID,
-      //         active: true
-      //       }         
-      //     }
-      //   })
-
-      //   collection.averagePrice = aggregations._avg
-      // })
-
-      await collections.forEach(async (collection) => {
-        // calculate average price of a collection with active tokens
-        let where = {
-          collectionID: collection.collectionID,
-          active: true,
-        };
-        const tokens = await prisma.tokens.findMany({ where });
-        const count = await prisma.collections.count({ where });
-        let avg = 0;
-        tokens.forEach((token) => {
-          avg += token.price;
-        });
-
-        collection.averagePrice = avg / count;
+      if (orderBy.totalSubscribers === 'asc') {
+        collections.sort((a, b) => b._count.marketpackages - a._count.marketpackages);
+      } else if (orderBy.totalSubscribers === 'desc') {
+        collections.sort((a, b) => a._count.marketpackages - b._count.marketpackages);
+      }
+      collections.map((collection) => {
+        collection.totalSubscribers = collection._count.marketpackages;
+        delete collection._count;
+        return collection;
       });
+  
+      // Paginate collections after sorting
+      let paginatedCollections = collections.slice(offset, offset + limit);
+  
+      // Calculate the average price of a collection with active tokens
+      paginatedCollections = await this.updateCollectionAvgPrice(paginatedCollections);
 
       return {
-        collections,
+        collections: paginatedCollections,
+        orderBy,
         count,
         limit,
         offset,
@@ -149,73 +141,69 @@ class CollectionService {
       console.log(err);
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
     }
-  }
+  }  
 
   async getCollectionsByWallet({ limit, offset, orderBy, chainID, title, creatorCollection, category, active }) {
     try {
-      let where;
-      let count = 0;
+      let where = {
+        disabled: false,
+        chainID: chainID,
+        OR: [
+          {
+            title: {
+              contains: title,
+            },
+          },
+          {
+            title_lowercase: {
+              contains: title,
+            },
+          },
+        ],
+        creatorCollection: {
+          contains: creatorCollection,
+        },
+        category: {
+          contains: category,
+        },
+      };
+  
       if (creatorCollection !== "" || category !== "" || active !== "") {
-        if (active !== "") {
-          where = {
-            disabled: false,
-            chainID: chainID,
-            OR: [
-              {
-                title: {
-                  contains: title,
-                }
-              },
-              {
-                title_lowercase: {
-                  contains: title,
-                }
-              },
-            ],
-            creatorCollection: {
-              contains: creatorCollection
-            },
-            category: {
-              contains: category
-            },
-            active: active == 'true'
-          };
-        } else {
-          where = {
-            disabled: false,
-            chainID: chainID,
-            OR: [
-              {
-                title: {
-                  contains: title,
-                }
-              },
-              {
-                title_lowercase: {
-                  contains: title,
-                }
-              },
-            ],
-            creatorCollection: {
-              contains: creatorCollection
-            },
-            category: {
-              contains: category
-            }
-          };
+        if (active !== "" ) {
+          where.active = active === 'true';
         }
-        count = await prisma.collections.count({ where });
-      } else {
-        count = await prisma.collections.count({ where: { disabled: false, chainID: chainID } });
       }
+
+      let count = await prisma.collections.count({ where });
+  
       let collections = await prisma.collections.findMany({
         where,
-        orderBy,
-        take: limit,
-        skip: offset
+        include: {
+          _count: {
+            select: { marketpackages: true },
+          },
+        },
+        orderBy : orderBy.totalSubscribers ? {} : orderBy,
       });
+      if (orderBy.totalSubscribers === 'asc') {
+        collections.sort((a, b) => b._count.marketpackages - a._count.marketpackages);
+      } else if (orderBy.totalSubscribers === 'desc') {
+        collections.sort((a, b) => a._count.marketpackages - b._count.marketpackages);
+      }
+      collections.map((collection) => {
+        collection.totalSubscribers = collection._count.marketpackages;
+        delete collection._count;
+        return collection;
+      });
+  
+      // Paginate collections after sorting
+      let paginatedCollections = collections.slice(offset, offset + limit);
+  
+      // Calculate the average price of a collection with active tokens
+      paginatedCollections = await this.updateCollectionAvgPrice(paginatedCollections);
+  
       return {
-        collections,
+        collections: paginatedCollections,
         count,
         limit,
         offset,
@@ -296,9 +284,22 @@ class CollectionService {
               }
             },
           ],
-          active: true
+          active: true,
+        },
+        include: {
+          _count: {
+            select: { marketpackages: true },
+          },
         },
       });
+
+      collections.map((collection) => {
+        collection.totalSubscribers = collection._count.marketpackages;
+        delete collection._count;
+        return collection;
+      });
+
+      // const updatedCollection = await this.updateCollectionAvgPrice(collections);
 
       return collections;
     } catch (err) {
@@ -312,7 +313,21 @@ class CollectionService {
       let { collectionID } = params;
       let collections = await prisma.collections.findMany({
         where: { collectionID: collectionID },
+        include: {
+          _count: {
+            select: { marketpackages: true },
+          },
+        },
       });
+
+      collections.map((collection) => {
+        collection.totalSubscribers = collection._count.marketpackages;
+        delete collection._count;
+        return collection;
+      });
+
+      // const updatedCollection = await this.updateCollectionAvgPrice(collections);
+
       return collections.at(0);
     } catch (err) {
       console.log(err);
@@ -325,7 +340,21 @@ class CollectionService {
       let { id } = params;
       let collections = await prisma.collections.findMany({
         where: { id: id },
+        include: {
+          _count: {
+            select: { marketpackages: true },
+          },
+        },
       });
+
+      collections.map((collection) => {
+        collection.totalSubscribers = collection._count.marketpackages;
+        delete collection._count;
+        return collection;
+      });
+
+      // const updatedCollection = await this.updateCollectionAvgPrice(collections);
+
       return collections.at(0);
     } catch (err) {
       console.log(err);
@@ -340,6 +369,17 @@ class CollectionService {
         where: {
           collectionID: collectionID
         },
+        include: {
+          _count: {
+            select: { marketpackages: true },
+          },
+        },
+      });
+
+      collections.map((collection) => {
+        collection.totalSubscribers = collection._count.marketpackages;
+        delete collection._count;
+        return collection;
       });
 
       if (collections.length > 0) {
