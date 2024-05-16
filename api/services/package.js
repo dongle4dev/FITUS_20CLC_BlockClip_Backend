@@ -214,9 +214,18 @@ class PackageService {
 
       let marketPackages = await prisma.marketpackages.findMany({
         where: {
-          subscriber: {
-            equals: userWallet,
-          },
+          OR: [
+            {
+              subscriber: {
+                equals: userWallet,
+              }
+            },
+            {
+              seller: {
+                equals: userWallet,
+              }
+            }
+          ],
           collectionID: {
             equals: collectionID,
           },
