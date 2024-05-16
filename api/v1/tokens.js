@@ -423,8 +423,6 @@ router.post("/license", verifyToken, async (req, res) => {
       },
     });
 
-    console.log(token);
-
     if (token) {
       const marketPackage =
         await packageServiceInstance.getSubscriberByCollectionID({
@@ -432,7 +430,7 @@ router.post("/license", verifyToken, async (req, res) => {
           collectionID: token.collectionID,
         });
       console.log(marketPackage);
-      if (marketPackage[0]) {
+      if (marketPackage[0] || token.owner === userWallet) {
         // Get JWT from header
         let jwt = req.headers.authorization.split(" ")[1];
         console.log(jwt);
