@@ -52,11 +52,11 @@ class CollectionService {
           },
         });
   
-        const totalPrices = tokens.reduce((sum, token) => sum + token.price, 0);
+        const totalPrices = tokens.reduce((sum, token) => sum + token.price, 0) || 0;
         const avgPrice = tokens.length ? totalPrices / tokens.length : 0;
   
         collection.averagePrice = avgPrice;
-  
+        
         // Update the collection in the database
         await prisma.collections.update({
           where: { collectionID: collection.collectionID },
