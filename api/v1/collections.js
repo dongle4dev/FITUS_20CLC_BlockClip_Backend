@@ -8,6 +8,8 @@ const validate = require("../utils/helper");
 let requestUtil = require("../utils/request-utils");
 let constants = require("../../config/constants");
 const verifyToken = require("../middlewares/verify-token");
+const packageService = require("../services/package");
+let packageServiceInstance = new packageService();
 
 /**
  * collection routes
@@ -166,6 +168,47 @@ router.get("/user/:wallet",
   }
 });
 
+
+/*
+  *  Get subscribed collections of user
+*/
+
+router.get("/subscribed", verifyToken, async (req, res) => {
+  try { 
+    let userWallet = req.userWallet;
+    let collection = [];
+
+    if (!userWallet) {
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+        .json({ message: constants.MESSAGES.INPUT_VALIDATION_ERROR });
+    }
+
+    const subscribed = await packageServiceInstance.getSubscriber({
+      userWallet,
+    });
+
+    await Promise.all(subscribed.map(async (sub) => {
+      let temp = await collectionServiceInstance.getCollectionByCollectionID({collectionID: sub.collectionID})
+      collection.push(temp);
+    }));
+
+    if (collection) {
+      return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
+        message: constants.RESPONSE_STATUS.SUCCESS,
+        data: collection,
+      });
+    } else {
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+        .json({ message: constants.RESPONSE_STATUS.FAILURE });
+    }
+  } catch (err) {
+    return res
+        .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+  }
+});
 
 /**
  *  Gets all the collection details
