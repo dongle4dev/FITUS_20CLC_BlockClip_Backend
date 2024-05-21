@@ -1,6 +1,7 @@
 const ffmpeg = require("fluent-ffmpeg");
 const ffmpegPath = require("ffmpeg-static");
 const fs = require("fs");
+const path = require('path');
 
 ffmpeg.setFfmpegPath(ffmpegPath);
 
@@ -16,13 +17,23 @@ const watermarkVideo = async (inputVideoPath, outputVideoPath) => {
       .input(watermark)
       .complexFilter([
         {
+          filter: "scale",
+          options: {
+            w: "150",
+            h: "75",
+          },
+          inputs: "1:v",
+          outputs: "v1"
+        },
+        {
           filter: "overlay",
           options: {
-            x: "main_w-overlay_w-10",
-            y: "main_h-overlay_h-10",
+            x: "main_w-overlay_w-40",
+            y: "main_h-overlay_h-30",
             enable: `between(t,0,${halfDuration})`,
           },
-        },
+          inputs: ["0:v", "v1"]
+        }
       ])
       .output(tempOutputVideoPath)
       .on("end", async () => {
@@ -53,12 +64,22 @@ const watermarkPosition2 = async (
       .input(watermark)
       .complexFilter([
         {
+          filter: "scale",
+          options: {
+            w: "150",
+            h: "75",
+          },
+          inputs: "1:v",
+          outputs: "v1"
+        },
+        {
           filter: "overlay",
           options: {
-            x: "10",
-            y: "10",
+            x: "20",
+            y: "40",
             enable: `between(t,${duration / 2},${duration})`,
           },
+          inputs: ["0:v", "v1"]  
         },
       ])
       .output(outputVideoPath)
@@ -67,6 +88,11 @@ const watermarkPosition2 = async (
         deleteTempVideo(tempOutputVideoPath);
         resolve(outputVideoPath);
       })
+      .screenshots({
+        timestamps: [0], 
+        filename: path.basename('public/avatar.png'),
+        folder: path.dirname('public/avatar.png'),
+      })
       .on("error", (err) => {
         console.error("Error watermarking position 2:", err);
         reject(err);
@@ -74,7 +100,6 @@ const watermarkPosition2 = async (
       .run();
   });
 };
-
 const deleteTempVideo = (videoPath) => {
   fs.unlink(videoPath, (err) => {
     if (err) {

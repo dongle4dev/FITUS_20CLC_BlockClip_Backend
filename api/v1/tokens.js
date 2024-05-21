@@ -17,6 +17,7 @@ const fs = require("fs");
 var crypto = require("crypto");
 const {
   uploadVideo,
+  uploadAvatar,
   uploadVideoWithSSE,
   createSymmetricKey,
   generatePresignedUrl,
@@ -24,6 +25,7 @@ const {
   isFileExist,
   getKeyKMS,
   updateKeyName,
+  updateFileAlias,
 } = require("../utils/serviceAWS");
 const VideoEncryptor = require("video-encryptor");
 const prisma = require("../../prisma");
@@ -255,12 +257,23 @@ router.post(
       }
 
       if (parseInt(req.body.mode) === constants.MODE.COMMERCIAL) {
+        const avatar = await isFileExist(`${req.body.creator}.png`);
+
+        if (!avatar) {
+          return res
+            .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+            .json({ message: "Avatar is not exist!" });
+        }
+
         const key = await getKeyKMS(req.body.creator);
         if (key) {
           console.log(key);
           let token = await tokenServiceInstance.createToken(req.body);
-          await updateKeyName(token.token.creator, token.token.id, key);
           if (token) {
+            await updateFileAlias(`${token.token.creator}.png`, `${token.token.id}.png`);
+            await updateKeyName(token.token.creator, token.token.id, key);
+            await updateToken({id: token.token.id, avatar: `https://block-clip.s3.ap-southeast-2.amazonaws.com/${token.token.id}.png`});
+            token = await tokenServiceInstance.getTokenByID({id: token.token.id});
             return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
               message: constants.RESPONSE_STATUS.SUCCESS,
               data: token,
@@ -276,11 +289,22 @@ router.post(
             .json({ message: "Key is not exist!" });
         }
       } else if (parseInt(req.body.mode) === constants.MODE.PUBLIC) {
-        let token = await tokenServiceInstance.createToken(req.body);
-        if (token) {
+        const avatar = await isFileExist(`${req.body.creator}.png`);
+        if (!avatar) {
           return res
-            .status(constants.RESPONSE_STATUS_CODES.OK)
-            .json({ message: constants.RESPONSE_STATUS.SUCCESS, data: token });
+            .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+            .json({ message: "Avatar is not exist!" });
+        }
+
+        let token = await tokenServiceInstance.createToken(req.body);
+        await updateFileAlias(`${token.token.creator}.png`, `${token.token.id}.png`);
+        await tokenServiceInstance.updateToken({id: token.token.id, avatar: `https://block-clip.s3.ap-southeast-2.amazonaws.com/${token.token.id}.png`});
+        token = await tokenServiceInstance.getTokenByID({id: token.token.id});
+        if (token) {
+          return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
+            message: constants.RESPONSE_STATUS.SUCCESS,
+            data: token,
+          });
         } else {
           return res
             .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
@@ -345,6 +369,9 @@ router.post(
         }
       }
 
+      await uploadAvatar("public/avatar.png", `${wallet}.png`);
+
+      await deleteTempVideo("public/avatar.png");
       await deleteTempVideo(outputVideo);
       await deleteTempVideo(outputEncode);
       await deleteTempVideo(inputVideo);
@@ -386,14 +413,15 @@ router.get("/file", verifyToken, async (req, res) => {
 
       const videoData = response.data;
 
-      if (videoData) 
+      if (videoData)
         return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
           message: constants.RESPONSE_STATUS.SUCCESS,
           data: videoData,
         });
       else {
-        return res.status(constants.RESPONSE_STATUS_CODES.OK)
-        .json({ message: "No video source!" });
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.OK)
+          .json({ message: "No video source!" });
       }
     } else {
       return res

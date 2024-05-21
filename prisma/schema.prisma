@@ -65,6 +65,7 @@ model tokens {
   title_lowercase     String      
   description         String?
   source              String?
+  avatar              String?
   mode                Int             @default(0)
   contractAddress     String?
   active              Boolean?        @default(true)

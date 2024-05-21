@@ -6,6 +6,8 @@ const {
   PutObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  CopyObjectCommand, 
+  DeleteObjectCommand
 } = require("@aws-sdk/client-s3");
 
 const {
@@ -99,6 +101,27 @@ const uploadVideo = async (videoFilePath, aliasName) => {
   }
 };
 
+const uploadAvatar = async (avatarFilePath, aliasName) => {
+  // Read the avatar file
+  const avatarFile = fs.readFileSync(avatarFilePath);
+
+  // Set the parameters for the S3 upload
+  const params = {
+    Bucket: bucketName,
+    Key: aliasName,
+    Body: avatarFile,
+    ContentType: "image/png",
+  };
+
+  try {
+    const command = new PutObjectCommand(params);
+    await s3.send(command);
+  }
+  catch (err) {
+    throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+  }
+};
+
 const uploadVideoWithSSE = async (videoFilePath, aliasName, kmsKeyId) => {
   // Read the video file
   const videoFile = fs.readFileSync(videoFilePath);
@@ -146,11 +169,7 @@ const isFileExist = async (keyName) => {
     await s3.send(command);
     return true; // Key exists
   } catch (error) {
-    if (error.name === "NotFound") {
-      return false; // Key does not exist
-    } else {
-      throw error; // Other error occurred
-    }
+    return false; // Key does not exist
   }
 };
 
@@ -217,6 +236,34 @@ async function updateKeyName(currentKeyAlias, newKeyAlias, keyID) {
   }
 }
 
+async function updateFileAlias(currentFileAlias, newFileAlias) {
+  try {
+
+    
+    // Define parameters for the CopyObject command
+    const copyObjectParams = {
+      Bucket: bucketName,
+      CopySource: `${bucketName}/${currentFileAlias}`, // The source file to copy
+      Key: newFileAlias, // The new file alias
+    };
+
+    // Copy the object with the new alias
+    await s3.send(new CopyObjectCommand(copyObjectParams));
+
+    // Delete the object with the old alias
+    const deleteObjectParams = {
+      Bucket: bucketName,
+      Key: currentFileAlias,
+    };
+    await s3.send(new DeleteObjectCommand(deleteObjectParams));
+
+    console.log("File alias updated successfully");
+  } catch (error) {
+    console.log("Error updating file alias:", error);
+    throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+  }
+}
+
 async function deleteKeyAlias(aliasName) {
   try {
     const params = {
@@ -232,6 +279,7 @@ async function deleteKeyAlias(aliasName) {
 module.exports = {
   uploadVideo,
   uploadVideoWithSSE,
+  uploadAvatar,
   generatePresignedUrl,
   isFileExist,
   downloadEncryptedFileFromS3,
@@ -239,4 +287,5 @@ module.exports = {
   getKeyKMS,
   updateKeyName,
   deleteKeyAlias,
+  updateFileAlias,
 };
