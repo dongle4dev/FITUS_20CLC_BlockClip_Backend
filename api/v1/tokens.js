@@ -272,7 +272,7 @@ router.post(
           if (token) {
             await updateFileAlias(`${token.token.creator}.png`, `${token.token.id}.png`);
             await updateKeyName(token.token.creator, token.token.id, key);
-            await updateToken({id: token.token.id, avatar: `https://block-clip.s3.ap-southeast-2.amazonaws.com/${token.token.id}.png`});
+            await tokenServiceInstance.updateToken({id: token.token.id, avatar: `https://block-clip.s3.ap-southeast-2.amazonaws.com/${token.token.id}.png`});
             token = await tokenServiceInstance.getTokenByID({id: token.token.id});
             return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
               message: constants.RESPONSE_STATUS.SUCCESS,
