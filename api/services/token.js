@@ -520,12 +520,12 @@ class TokenService {
       let { description: params_description, source: params_source,
         title: params_title, active: params_active, disabled: params_disabled,
         tokenID: params_tokenID, contractAddress: params_contractAddress,
-        owner: params_owner,
+        owner: params_owner, avatar: params_avatar, 
       } = params;
       let { description: current_description, source: current_source,
         title: current_title, active: current_active, disabled: current_disabled,
         tokenID: current_tokenID, contractAddress: current_contractAddress,
-        owner: current_owner
+        owner: current_owner, avatar: current_avatar,
       } = current;
       let token = await prisma.tokens.update({
         where: {
@@ -553,6 +553,7 @@ class TokenService {
           } : {
             connect: { wallet: current_owner }
           },
+          avatar: params_avatar ? params_avatar : current_avatar,
         },
       });
 
