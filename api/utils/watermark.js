@@ -1,7 +1,7 @@
 const ffmpeg = require("fluent-ffmpeg");
 const ffmpegPath = require("ffmpeg-static");
 const fs = require("fs");
-const path = require('path');
+const path = require("path");
 
 ffmpeg.setFfmpegPath(ffmpegPath);
 
@@ -10,34 +10,37 @@ let watermark = "public/watermark.png";
 const watermarkVideo = async (inputVideoPath, outputVideoPath) => {
   const duration = await getInputVideoLength(inputVideoPath);
   const tempOutputVideoPath = "temp_output.mp4";
-  const halfDuration = duration / 2;
   let link;
   return new Promise((resolve, reject) => {
     ffmpeg(inputVideoPath)
       .input(watermark)
-      .complexFilter([
-        {
-          filter: "scale",
-          options: {
-            w: "150",
-            h: "75",
-          },
-          inputs: "1:v",
-          outputs: "v1"
-        },
-        {
-          filter: "overlay",
-          options: {
-            x: "main_w-overlay_w-40",
-            y: "main_h-overlay_h-30",
-            enable: `between(t,0,${halfDuration})`,
-          },
-          inputs: ["0:v", "v1"]
-        }
-      ])
+      .screenshots({
+        timestamps: [0],
+        filename: path.basename("public/avatar.png"),
+        folder: path.dirname("public/avatar.png"),
+      })
+      // .complexFilter([
+      //   {
+      //     filter: "scale",
+      //     options: {
+      //       w: "150",
+      //       h: "75",
+      //     },
+      //     inputs: "1:v",
+      //     outputs: "v1"
+      //   },
+      //   {
+      //     filter: "overlay",
+      //     options: {
+      //       x: "main_w-overlay_w-40",
+      //       y: "main_h-overlay_h-30",
+      //       enable: `between(t,0,${duration * 0.1})`,
+      //     },
+      //     inputs: ["0:v", "v1"]
+      //   }
+      // ])
       .output(tempOutputVideoPath)
       .on("end", async () => {
-        console.log("Watermarking completed for position 1");
         link = await watermarkPosition2(
           outputVideoPath,
           tempOutputVideoPath,
@@ -66,32 +69,64 @@ const watermarkPosition2 = async (
         {
           filter: "scale",
           options: {
-            w: "150",
-            h: "75",
+            w: "iw/5",
+            h: "ih/5",
           },
           inputs: "1:v",
-          outputs: "v1"
+          outputs: "v1",
+        },
+        {
+          filter: "overlay",
+          options: {
+            x: "main_w-overlay_w-40",
+            y: "main_h-overlay_h-30",
+            enable: `between(t,0,${duration * 0.1})`,
+          },
+          inputs: ["0:v", "v1"],
+          outputs: "v2",
+        },
+        {
+          filter: "scale",
+          options: {
+            w: "iw/5",
+            h: "ih/5",
+          },
+          inputs: "1:v",
+          outputs: "v3",
         },
         {
           filter: "overlay",
           options: {
             x: "20",
-            y: "40",
-            enable: `between(t,${duration / 2},${duration})`,
+            y: "main_w-overlay_w/2",
+            enable: `between(t,${duration * 0.4},${duration * 0.6})`,
           },
-          inputs: ["0:v", "v1"]  
+          inputs: ["v2", "v3"],
+          outputs: "v4",
         },
+        {
+          filter: "scale",
+          options: {
+            w: "iw/5",
+            h: "ih/5",
+          },
+          inputs: "1:v",
+          outputs: "v5",
+        },
+        {
+          filter: "overlay",
+          options: {
+            x: "main_w-overlay_w-40",
+            y: "main_h-overlay_h-30",
+            enable: `between(t,${duration * 0.9},${duration})`,
+          },
+          inputs: ["v4", "v5"],
+        }
       ])
       .output(outputVideoPath)
       .on("end", async () => {
-        console.log("Watermarking completed for position 2");
         deleteTempVideo(tempOutputVideoPath);
         resolve(outputVideoPath);
-      })
-      .screenshots({
-        timestamps: [0], 
-        filename: path.basename('public/avatar.png'),
-        folder: path.dirname('public/avatar.png'),
       })
       .on("error", (err) => {
         console.error("Error watermarking position 2:", err);
@@ -100,6 +135,7 @@ const watermarkPosition2 = async (
       .run();
   });
 };
+
 const deleteTempVideo = (videoPath) => {
   fs.unlink(videoPath, (err) => {
     if (err) {

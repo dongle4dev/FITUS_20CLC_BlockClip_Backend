@@ -223,7 +223,7 @@ class FriendService {
           OR: [
             {
               from_friends: {
-                every: {
+                some: {
                   status: {
                     equals: 1
                   },
@@ -233,7 +233,7 @@ class FriendService {
             },
             {
               to_friends: {
-                every: {
+                some: {
                   status: {
                     equals: 1
                   },

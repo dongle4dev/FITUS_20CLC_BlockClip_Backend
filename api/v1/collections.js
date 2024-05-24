@@ -188,6 +188,7 @@ router.get("/subscribed", verifyToken, async (req, res) => {
       userWallet,
     });
 
+    let count = subscribed.length;
     await Promise.all(subscribed.map(async (sub) => {
       let temp = await collectionServiceInstance.getCollectionByCollectionID({collectionID: sub.collectionID})
       collection.push(temp);
@@ -196,7 +197,7 @@ router.get("/subscribed", verifyToken, async (req, res) => {
     if (collection) {
       return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
         message: constants.RESPONSE_STATUS.SUCCESS,
-        data: collection,
+        data: {collections: collection, count}, 
       });
     } else {
       return res
