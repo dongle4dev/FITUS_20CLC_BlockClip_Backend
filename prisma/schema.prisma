@@ -28,6 +28,8 @@ model users {
   messages      messages[]
   firstUser_chats         chats[]         @relation("firstUser_chats")
   secondUser_chats        chats[]         @relation("secondUser_chats")
+  from_reports  reports[]       @relation("from_reports")
+  to_reports    reports[]       @relation("to_reports")
 }
 
 model collections {
@@ -80,6 +82,7 @@ model tokens {
   creatorWallet       users         @relation("creator_tokens", fields: [creator], references: [wallet])
   ownerWallet         users         @relation("owner_tokens", fields: [owner], references: [wallet])
   collection          collections   @relation(fields: [collectionID], references: [collectionID])
+  reports             reports[]
 }
 
 model marketorders {
@@ -151,5 +154,19 @@ model messages {
   updatedAt           DateTime        @updatedAt
   chat                chats           @relation(fields: [chatID], references: [id])
   sender              users           @relation(fields: [senderID], references: [wallet])
+}
+
+model reports {
+  id                  String          @id @default(auto()) @map("_id") @db.ObjectId
+  from                String
+  tokenID            String
+  to                  String
+  status              Int   
+  description         String
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  token              tokens          @relation(fields: [tokenID], references: [tokenID])
+  sender              users           @relation("from_reports", fields: [from], references: [wallet])
+  owner               users           @relation("to_reports", fields: [to], references: [wallet])
 }
 
