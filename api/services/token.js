@@ -6,14 +6,23 @@ const prisma = require("../../prisma");
 const config = require("../../config/config");
 // const userService = require("./user");
 // let userServiceInstance = new userService();
-const pinataSDK = require('@pinata/sdk');
+const pinataSDK = require("@pinata/sdk");
 const pinata = new pinataSDK(config.PINATA_API_KEY, config.PINATA_API_SECRET);
-const fs = require('fs');
+const fs = require("fs");
 const path = require("path");
 
 class TokenService {
-
-  async getTokens({ limit, offset, orderBy, title, creator, owner, collectionID, status, active }) {
+  async getTokens({
+    limit,
+    offset,
+    orderBy,
+    title,
+    creator,
+    owner,
+    collectionID,
+    status,
+    active,
+  }) {
     try {
       let where;
 
@@ -21,112 +30,112 @@ class TokenService {
         where = {
           disabled: false,
           collectionID: {
-            contains: collectionID
+            contains: collectionID,
           },
           OR: [
             {
               title: {
                 contains: title,
-              }
+              },
             },
             {
               title_lowercase: {
                 contains: title,
-              }
+              },
             },
           ],
           creator: {
-            contains: creator
+            contains: creator,
           },
           owner: {
-            contains: owner
+            contains: owner,
           },
           marketorders: {
             some: {
-              status: parseInt(status)
-            }
+              status: parseInt(status),
+            },
           },
-          active: active == 'true'
+          active: active == "true",
         };
       } else if (status !== "") {
         where = {
           disabled: false,
           collectionID: {
-            contains: collectionID
+            contains: collectionID,
           },
           OR: [
             {
               title: {
                 contains: title,
-              }
+              },
             },
             {
               title_lowercase: {
                 contains: title,
-              }
+              },
             },
           ],
           creator: {
-            contains: creator
+            contains: creator,
           },
           owner: {
-            contains: owner
+            contains: owner,
           },
           marketorders: {
             some: {
-              status: parseInt(status)
-            }
-          }
+              status: parseInt(status),
+            },
+          },
         };
       } else if (active !== "") {
         where = {
           disabled: false,
           collectionID: {
-            contains: collectionID
+            contains: collectionID,
           },
           OR: [
             {
               title: {
                 contains: title,
-              }
+              },
             },
             {
               title_lowercase: {
                 contains: title,
-              }
+              },
             },
           ],
           creator: {
-            contains: creator
+            contains: creator,
           },
           owner: {
-            contains: owner
+            contains: owner,
           },
-          active: active == 'true'
+          active: active == "true",
         };
       } else {
         where = {
           disabled: false,
           collectionID: {
-            contains: collectionID
+            contains: collectionID,
           },
           OR: [
             {
               title: {
                 contains: title,
-              }
+              },
             },
             {
               title_lowercase: {
                 contains: title,
-              }
+              },
             },
           ],
           creator: {
-            contains: creator
+            contains: creator,
           },
           owner: {
-            contains: owner
+            contains: owner,
           },
         };
       }
@@ -155,7 +164,17 @@ class TokenService {
     }
   }
 
-  async getTokensByPrice({ limit, offset, orderBy, title, creator, owner, collectionID, status, active }) {
+  async getTokensByPrice({
+    limit,
+    offset,
+    orderBy,
+    title,
+    creator,
+    owner,
+    collectionID,
+    status,
+    active,
+  }) {
     try {
       let where;
 
@@ -163,118 +182,125 @@ class TokenService {
         where = {
           disabled: false,
           collectionID: {
-            contains: collectionID
+            contains: collectionID,
           },
           OR: [
             {
               title: {
                 contains: title,
-              }
+              },
             },
             {
               title_lowercase: {
                 contains: title,
-              }
+              },
             },
           ],
           creator: {
-            contains: creator
+            contains: creator,
           },
           owner: {
-            contains: owner
+            contains: owner,
           },
           marketorders: {
             some: {
               status: parseInt(status),
-            }
+            },
           },
-          active: active == 'true'
+          active: active == "true",
         };
       } else if (status !== "") {
         where = {
           disabled: false,
           collectionID: {
-            contains: collectionID
+            contains: collectionID,
           },
           OR: [
             {
               title: {
                 contains: title,
-              }
+              },
             },
             {
               title_lowercase: {
                 contains: title,
-              }
+              },
             },
           ],
           creator: {
-            contains: creator
+            contains: creator,
           },
           owner: {
-            contains: owner
+            contains: owner,
           },
           marketorders: {
             some: {
-              status: parseInt(status)
-            }
-          }
+              status: parseInt(status),
+            },
+          },
         };
       } else if (active !== "") {
         where = {
           disabled: false,
           collectionID: {
-            contains: collectionID
+            contains: collectionID,
           },
           OR: [
             {
               title: {
                 contains: title,
-              }
+              },
             },
             {
               title_lowercase: {
                 contains: title,
-              }
+              },
             },
           ],
           creator: {
-            contains: creator
+            contains: creator,
           },
           owner: {
-            contains: owner
+            contains: owner,
           },
-          active: active == 'true'
+          active: active == "true",
         };
       } else {
         where = {
           disabled: false,
           collectionID: {
-            contains: collectionID
+            contains: collectionID,
           },
           OR: [
             {
               title: {
                 contains: title,
-              }
+              },
             },
             {
               title_lowercase: {
                 contains: title,
-              }
+              },
             },
           ],
           creator: {
-            contains: creator
+            contains: creator,
           },
           owner: {
-            contains: owner
+            contains: owner,
           },
         };
       }
 
       let count = 0;
-      if (creator !== "" || owner !== "" || collectionID !== "" || title !== "" || status !== "" || active !== "") {
+      if (
+        creator !== "" ||
+        owner !== "" ||
+        collectionID !== "" ||
+        title !== "" ||
+        status !== "" ||
+        active !== ""
+      ) {
         count = await prisma.tokens.count({ where });
       } else {
         count = await prisma.tokens.count({ where: { disabled: false } });
@@ -283,13 +309,13 @@ class TokenService {
         where,
         orderBy,
         take: limit,
-        skip: offset
+        skip: offset,
       });
       return {
         tokens,
         count,
         limit,
-        offset
+        offset,
       };
     } catch (err) {
       console.log(err);
@@ -299,7 +325,17 @@ class TokenService {
 
   async createToken(params) {
     try {
-      let { creator, owner, title, description, source, collectionID, chainID, contractAddress, mode } = params;
+      let {
+        creator,
+        owner,
+        title,
+        description,
+        source,
+        collectionID,
+        chainID,
+        contractAddress,
+        mode,
+      } = params;
       let token = await prisma.tokens.create({
         data: {
           creatorWallet: { connect: { wallet: creator } },
@@ -308,10 +344,12 @@ class TokenService {
           title_lowercase: title.toLowerCase(),
           description: description,
           source: source,
-          collection: collectionID ? { connect: { collectionID: collectionID } } : null,
+          collection: collectionID
+            ? { connect: { collectionID: collectionID } }
+            : null,
           chainID: chainID ? chainID : null,
           contractAddress: contractAddress,
-          mode: mode
+          mode: mode,
         },
       });
       let tempToken = { ...token };
@@ -322,10 +360,13 @@ class TokenService {
       delete tempToken.listOfLikedUsers, delete tempToken.listOfFavoriteUsers;
       delete tempToken.totalViews, delete tempToken.collectionID;
       delete tempToken.totalShares;
-      
+
       const res = await pinata.pinJSONToIPFS(tempToken);
 
-      return { token, tokenURI: `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}` };
+      return {
+        token,
+        tokenURI: `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}`,
+      };
     } catch (err) {
       console.log(err);
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
@@ -374,25 +415,33 @@ class TokenService {
     }
   }
 
-  async getTokensByUser({ limit, offset, orderBy, title, wallet, tokenID, active }) {
+  async getTokensByUser({
+    limit,
+    offset,
+    orderBy,
+    title,
+    wallet,
+    tokenID,
+    active,
+  }) {
     try {
       let where;
       if (active !== "") {
         where = {
           disabled: false,
           tokenID: {
-            contains: tokenID
+            contains: tokenID,
           },
           OR: [
             {
               title: {
                 contains: title,
-              }
+              },
             },
             {
               title_lowercase: {
                 contains: title,
-              }
+              },
             },
           ],
           creator: {
@@ -401,24 +450,24 @@ class TokenService {
           owner: {
             contains: wallet,
           },
-          active: active == 'true'
+          active: active == "true",
         };
       } else {
         where = {
           disabled: false,
           tokenID: {
-            contains: tokenID
+            contains: tokenID,
           },
           OR: [
             {
               title: {
                 contains: title,
-              }
+              },
             },
             {
               title_lowercase: {
                 contains: title,
-              }
+              },
             },
           ],
           creator: {
@@ -430,19 +479,18 @@ class TokenService {
         };
       }
 
-
       let count = await prisma.tokens.count({ where });
       let tokens = await prisma.tokens.findMany({
         where,
         orderBy,
         take: limit,
-        skip: offset
+        skip: offset,
       });
       return {
         tokens,
         count,
         limit,
-        offset
+        offset,
       };
     } catch (err) {
       console.log(err);
@@ -450,7 +498,14 @@ class TokenService {
     }
   }
 
-  async getFavoritedTokensByUser({ limit, offset, orderBy, title, wallet, active }) {
+  async getFavoritedTokensByUser({
+    limit,
+    offset,
+    orderBy,
+    title,
+    wallet,
+    active,
+  }) {
     try {
       let where;
       if (active !== "") {
@@ -460,18 +515,18 @@ class TokenService {
             {
               title: {
                 contains: title,
-              }
+              },
             },
             {
               title_lowercase: {
                 contains: title.toLowerCase(),
-              }
+              },
             },
           ],
           listOfFavoriteUsers: {
-            hasSome: [wallet]
+            hasSome: [wallet],
           },
-          active: active == 'true'
+          active: active == "true",
         };
       } else {
         where = {
@@ -480,33 +535,32 @@ class TokenService {
             {
               title: {
                 contains: title,
-              }
+              },
             },
             {
               title_lowercase: {
                 contains: title.toLowerCase(),
-              }
+              },
             },
           ],
           listOfFavoriteUsers: {
-            hasSome: [wallet]
+            hasSome: [wallet],
           },
         };
       }
-
 
       let count = await prisma.tokens.count({ where });
       let tokens = await prisma.tokens.findMany({
         where,
         orderBy,
         take: limit,
-        skip: offset
+        skip: offset,
       });
       return {
         tokens,
         count,
         limit,
-        offset
+        offset,
       };
     } catch (err) {
       console.log(err);
@@ -517,48 +571,66 @@ class TokenService {
   async updateToken(params) {
     try {
       let current = await this.getTokenByID(params);
-      let { description: params_description, source: params_source,
-        title: params_title, active: params_active, disabled: params_disabled,
-        tokenID: params_tokenID, contractAddress: params_contractAddress,
-        owner: params_owner, avatar: params_avatar, 
+      let {
+        description: params_description,
+        source: params_source,
+        title: params_title,
+        active: params_active,
+        disabled: params_disabled,
+        tokenID: params_tokenID,
+        contractAddress: params_contractAddress,
+        owner: params_owner,
+        avatar: params_avatar,
       } = params;
-      let { description: current_description, source: current_source,
-        title: current_title, active: current_active, disabled: current_disabled,
-        tokenID: current_tokenID, contractAddress: current_contractAddress,
-        owner: current_owner, avatar: current_avatar,
+      let {
+        description: current_description,
+        source: current_source,
+        title: current_title,
+        active: current_active,
+        disabled: current_disabled,
+        tokenID: current_tokenID,
+        contractAddress: current_contractAddress,
+        owner: current_owner,
+        avatar: current_avatar,
       } = current;
       let token = await prisma.tokens.update({
         where: {
-          id: current.id
+          id: current.id,
         },
         data: {
           description: params_description
             ? params_description
             : current_description,
           source: params_source ? params_source : current_source,
-          title: params_title
-            ? params_title
-            : current_title,
-          active: params_active !== undefined
-            ? params_active
-            : current_active,
-          disabled: params_disabled !== undefined ? params_disabled : current_disabled,
+          avatar: params_avatar ? params_avatar : current_avatar,
+          title: params_title ? params_title : current_title,
+          active: params_active !== undefined ? params_active : current_active,
+          disabled:
+            params_disabled !== undefined ? params_disabled : current_disabled,
           title_lowercase: params_title
             ? params_title.toLowerCase()
             : current_title.toLowerCase(),
           tokenID: params_tokenID ? params_tokenID : current_tokenID,
-          contractAddress: params_contractAddress ? params_contractAddress : current_contractAddress,
-          ownerWallet: params_owner ? {
-            connect: { wallet: params_owner }
-          } : {
-            connect: { wallet: current_owner }
-          },
-          avatar: params_avatar ? params_avatar : current_avatar,
+          contractAddress: params_contractAddress
+            ? params_contractAddress
+            : current_contractAddress,
+          ownerWallet: params_owner
+            ? {
+                connect: { wallet: params_owner },
+              }
+            : {
+                connect: { wallet: current_owner },
+              },
         },
       });
 
-      if (params_description || params_title ||
-        params_source || params_contractAddress || params_owner) {
+      if (
+        params_description ||
+        params_title ||
+        params_source ||
+        params_contractAddress ||
+        params_owner
+      ) {
         let tempToken = { ...token };
         delete tempToken.id, delete tempToken.active, delete tempToken.disabled;
         delete tempToken.updatedAt, delete tempToken.createdAt;
@@ -568,13 +640,15 @@ class TokenService {
         delete tempToken.totalShares;
         const res = await pinata.pinJSONToIPFS(tempToken);
         if (params.tokenURI) {
-          const res2 = await pinata.unpin(params.tokenURI.split('/')[4]);
+          const res2 = await pinata.unpin(params.tokenURI.split("/")[4]);
           console.log("Unpin token on Pinata: " + res2);
         }
 
-        return { token, tokenURI: `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}` };
+        return {
+          token,
+          tokenURI: `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}`,
+        };
       } else return token;
-
     } catch (err) {
       console.log(err);
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
@@ -584,53 +658,75 @@ class TokenService {
   async updateTokenByTokenID(params) {
     try {
       let current = await this.getTokenByTokenID(params);
-      let { description: params_description, source: params_source,
-        title: params_title, active: params_active, disabled: params_disabled,
-        tokenID: params_tokenID, contractAddress: params_contractAddress,
-        owner: params_owner, collectionID: params_collectionID,
+      let {
+        description: params_description,
+        source: params_source,
+        title: params_title,
+        active: params_active,
+        disabled: params_disabled,
+        tokenID: params_tokenID,
+        contractAddress: params_contractAddress,
+        owner: params_owner,
+        collectionID: params_collectionID,
+        avatar: params_avatar,
       } = params;
-      let { description: current_description, source: current_source,
-        title: current_title, active: current_active, disabled: current_disabled,
-        tokenID: current_tokenID, contractAddress: current_contractAddress,
-        owner: current_owner, collectionID: current_collectionID
+      let {
+        description: current_description,
+        source: current_source,
+        title: current_title,
+        active: current_active,
+        disabled: current_disabled,
+        tokenID: current_tokenID,
+        contractAddress: current_contractAddress,
+        owner: current_owner,
+        collectionID: current_collectionID,
+        avatar: current_avatar,
       } = current;
       let token = await prisma.tokens.update({
         where: {
-          id: current.id
+          id: current.id,
         },
         data: {
           description: params_description
             ? params_description
             : current_description,
           source: params_source ? params_source : current_source,
-          title: params_title
-            ? params_title
-            : current_title,
-          active: params_active !== undefined
-            ? params_active
-            : current_active,
-          disabled: params_disabled !== undefined ? params_disabled : current_disabled,
+          avatar: params_avatar ? params_avatar : current_avatar,
+          title: params_title ? params_title : current_title,
+          active: params_active !== undefined ? params_active : current_active,
+          disabled:
+            params_disabled !== undefined ? params_disabled : current_disabled,
           title_lowercase: params_title
             ? params_title.toLowerCase()
             : current_title.toLowerCase(),
           tokenID: params_tokenID ? params_tokenID : current_tokenID,
-          contractAddress: params_contractAddress ? params_contractAddress : current_contractAddress,
-          ownerWallet: params_owner ? {
-            connect: { wallet: params_owner }
-          } : {
-            connect: { wallet: current_owner }
-          },
-          collection: params_collectionID ? {
-            connect: { collectionID: params_collectionID }
-          } : {
-            connect: { collectionID: current_collectionID }
-          },
+          contractAddress: params_contractAddress
+            ? params_contractAddress
+            : current_contractAddress,
+          ownerWallet: params_owner
+            ? {
+                connect: { wallet: params_owner },
+              }
+            : {
+                connect: { wallet: current_owner },
+              },
+          collection: params_collectionID
+            ? {
+                connect: { collectionID: params_collectionID },
+              }
+            : {
+                connect: { collectionID: current_collectionID },
+              },
         },
       });
 
-      if (params_description || params_title ||
-        params_source || params_contractAddress || 
-        params_owner) {
+      if (
+        params_description ||
+        params_title ||
+        params_source ||
+        params_contractAddress ||
+        params_owner
+      ) {
         let tempToken = { ...token };
         delete tempToken.id, delete tempToken.active, delete tempToken.disabled;
         delete tempToken.updatedAt, delete tempToken.createdAt;
@@ -640,13 +736,15 @@ class TokenService {
         delete tempToken.totalShares;
         const res = await pinata.pinJSONToIPFS(tempToken);
         if (params.tokenURI) {
-          const res2 = await pinata.unpin(params.tokenURI.split('/')[4]);
+          const res2 = await pinata.unpin(params.tokenURI.split("/")[4]);
           console.log("Unpin token on Pinata: " + res2);
         }
 
-        return { token, tokenURI: `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}` };
+        return {
+          token,
+          tokenURI: `https://gateway.pinata.cloud/ipfs/${res.IpfsHash}`,
+        };
       } else return token;
-
     } catch (err) {
       console.log(err);
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
@@ -656,12 +754,12 @@ class TokenService {
   async uploadVideoToIPFS(source) {
     try {
       const stream = fs.createReadStream(path.resolve(source));
-      const indexForNaming = stream.path.lastIndexOf("/")
+      const indexForNaming = stream.path.lastIndexOf("/");
       const options = {
         pinataMetadata: {
           name: stream.path.slice(indexForNaming + 1),
         },
-      }
+      };
 
       const res = await pinata.pinFileToIPFS(stream, options);
 
@@ -677,7 +775,7 @@ class TokenService {
       let { tokenID, userWallet } = params;
       let tokens = await prisma.tokens.findMany({
         where: {
-          tokenID: tokenID
+          tokenID: tokenID,
         },
       });
 
@@ -690,15 +788,14 @@ class TokenService {
         }
         let token = await prisma.tokens.update({
           where: {
-            tokenID: tokenID
+            tokenID: tokenID,
           },
           data: {
-            listOfLikedUsers: tokens.listOfLikedUsers
-          }
-        })
+            listOfLikedUsers: tokens.listOfLikedUsers,
+          },
+        });
         return token;
-      }
-      else return tokens;
+      } else return tokens;
     } catch (err) {
       console.log(err);
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
@@ -712,15 +809,14 @@ class TokenService {
         where: {
           tokenID: tokenID,
           listOfLikedUsers: {
-            hasSome: [userWallet]
-          }
+            hasSome: [userWallet],
+          },
         },
       });
 
       if (tokens.length > 0) {
         return { isLiked: true };
-      }
-      else return { isLiked: false };
+      } else return { isLiked: false };
     } catch (err) {
       console.log(err);
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
@@ -732,7 +828,7 @@ class TokenService {
       let { tokenID, userWallet } = params;
       let tokens = await prisma.tokens.findMany({
         where: {
-          tokenID: tokenID
+          tokenID: tokenID,
         },
       });
 
@@ -745,15 +841,14 @@ class TokenService {
         }
         let token = await prisma.tokens.update({
           where: {
-            tokenID: tokenID
+            tokenID: tokenID,
           },
           data: {
-            listOfFavoriteUsers: tokens.listOfFavoriteUsers
-          }
-        })
+            listOfFavoriteUsers: tokens.listOfFavoriteUsers,
+          },
+        });
         return token;
-      }
-      else return tokens;
+      } else return tokens;
     } catch (err) {
       console.log(err);
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
@@ -767,15 +862,14 @@ class TokenService {
         where: {
           tokenID: tokenID,
           listOfFavoriteUsers: {
-            hasSome: [userWallet]
-          }
+            hasSome: [userWallet],
+          },
         },
       });
 
       if (tokens.length > 0) {
         return { isFavorited: true };
-      }
-      else return { isFavorited: false };
+      } else return { isFavorited: false };
     } catch (err) {
       console.log(err);
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
@@ -787,7 +881,7 @@ class TokenService {
       let { tokenID } = params;
       let tokens = await prisma.tokens.findMany({
         where: {
-          tokenID: tokenID
+          tokenID: tokenID,
         },
       });
 
@@ -796,15 +890,14 @@ class TokenService {
 
         let token = await prisma.tokens.update({
           where: {
-            tokenID: tokenID
+            tokenID: tokenID,
           },
           data: {
-            totalViews: tokens.totalViews + 1
-          }
-        })
+            totalViews: tokens.totalViews + 1,
+          },
+        });
         return token;
-      }
-      else return tokens;
+      } else return tokens;
     } catch (err) {
       console.log(err);
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
@@ -816,7 +909,7 @@ class TokenService {
       let { tokenID } = params;
       let tokens = await prisma.tokens.findMany({
         where: {
-          tokenID: tokenID
+          tokenID: tokenID,
         },
       });
 
@@ -825,15 +918,93 @@ class TokenService {
 
         let token = await prisma.tokens.update({
           where: {
-            tokenID: tokenID
+            tokenID: tokenID,
           },
           data: {
-            totalShares: tokens.totalShares + 1
-          }
-        })
+            totalShares: tokens.totalShares + 1,
+          },
+        });
         return token;
+      } else return tokens;
+    } catch (err) {
+      console.log(err);
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getTokensByTime(type, from, to) {
+    try {
+      const results = [];
+
+      let currentDate = new Date(from);
+      let end = new Date(to);
+      if (to === "") {
+        end = new Date();
       }
-      else return tokens;
+
+      while (currentDate <= end) {
+        let periodStart, periodEnd;
+        if (type === "MONTH") {
+          periodStart = new Date(
+            currentDate.getFullYear(),
+            currentDate.getMonth(),
+            1
+          );
+          periodEnd = new Date(
+            currentDate.getFullYear(),
+            currentDate.getMonth() + 1,
+            0,
+            23,
+            59,
+            59,
+            999
+          );
+          currentDate.setMonth(currentDate.getMonth() + 1);
+        } else if (type === "YEAR") {
+          periodStart = new Date(currentDate.getFullYear(), 0, 1);
+          periodEnd = new Date(
+            currentDate.getFullYear(),
+            11,
+            31,
+            23,
+            59,
+            59,
+            999
+          );
+          currentDate.setFullYear(currentDate.getFullYear() + 1);
+        } else if (type === "WEEK") {
+          periodStart = new Date(currentDate);
+          periodStart.setDate(periodStart.getDate() - periodStart.getDay()); // Start of the week (Sunday)
+          periodEnd = new Date(periodStart);
+          periodEnd.setDate(periodEnd.getDate() + 6); // End of the week (Saturday)
+          periodEnd.setHours(23, 59, 59, 999);
+          currentDate.setDate(currentDate.getDate() + 7);
+        } else {
+          throw new Error(
+            "Invalid period type. Use 'month', 'year', or 'week'."
+          );
+        }
+
+        const token = await prisma.tokens.count({
+          where: {
+            createdAt: {
+              gte: periodStart,
+              lt: periodEnd,
+            },
+          },
+        });
+
+        results.push({
+          from: periodStart.toLocaleDateString(),
+          to: periodEnd.toLocaleDateString(),
+          count: token,
+        });
+      }
+
+      return {
+        results,
+        count: results.reduce((acc, curr) => acc + curr.count, 0),
+      };
     } catch (err) {
       console.log(err);
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);

@@ -14,7 +14,16 @@ let tokenServiceInstance = new tokenService();
 class MarketOrderService {
   async placeFixedOrder(params) {
     try {
-      let { tokenID, chainID, tokenAddress, paymentType, seller, status, price, event } = params;
+      let {
+        tokenID,
+        chainID,
+        tokenAddress,
+        paymentType,
+        seller,
+        status,
+        price,
+        event,
+      } = params;
       let order = await prisma.marketorders.create({
         data: {
           sellerWallet: { connect: { wallet: seller } },
@@ -24,7 +33,7 @@ class MarketOrderService {
           paymentType: paymentType,
           status: status,
           price: price,
-          event: event
+          event: event,
         },
       });
       return order;
@@ -99,11 +108,13 @@ class MarketOrderService {
     try {
       let where = {
         tokenID: {
-          contains: tokenID
+          contains: tokenID,
         },
-        status: status ? parseInt(status) : {
-          not: 5
-        }
+        status: status
+          ? parseInt(status)
+          : {
+              not: 5,
+            },
       };
 
       let count = await prisma.marketorders.count({ where });
@@ -115,7 +126,7 @@ class MarketOrderService {
       });
       return {
         order,
-        count
+        count,
       };
     } catch (err) {
       console.log(err);
@@ -128,20 +139,24 @@ class MarketOrderService {
       let where;
       if (active !== "") {
         where = {
-          status: status ? parseInt(status) : {
-            not: 5
-          },
+          status: status
+            ? parseInt(status)
+            : {
+                not: 5,
+              },
           tokens: {
             is: {
-              active: active == 'true'
-            }
+              active: active == "true",
+            },
           },
         };
       } else {
         where = {
-          status: status ? parseInt(status) : {
-            not: 5
-          }
+          status: status
+            ? parseInt(status)
+            : {
+                not: 5,
+              },
         };
       }
 
@@ -152,16 +167,16 @@ class MarketOrderService {
         take: limit,
         skip: offset,
         select: {
-          tokens: true
+          tokens: true,
         },
-        distinct: ['tokenID']
+        distinct: ["tokenID"],
       });
       let tokens = orders.map((order) => {
         return order.tokens;
-      })
+      });
       return {
         tokens,
-        count
+        count,
       };
     } catch (err) {
       console.log(err);
@@ -259,14 +274,14 @@ class MarketOrderService {
     try {
       let { tokenID } = params;
       const orderBy = {
-        createdAt: "desc"
-      }
+        createdAt: "desc",
+      };
       let order = await prisma.marketorders.findMany({
         where: {
           tokenID: tokenID,
         },
         orderBy,
-        take: 1
+        take: 1,
       });
       return order;
     } catch (err) {
@@ -297,9 +312,11 @@ class MarketOrderService {
         where: {
           tokenID: tokenID,
           status: status ? parseInt(status) : 1,
-          seller: seller ? seller : {
-            contains: ""
-          },
+          seller: seller
+            ? seller
+            : {
+                contains: "",
+              },
         },
       });
 
@@ -364,29 +381,36 @@ class MarketOrderService {
   async updateOrder(params) {
     try {
       let current = await this.getOrderByID(params);
-      let { price: current_price, status: current_status,
-        buyer: current_buyer } = current;
-      let { price: params_price, status: params_status,
-        buyer: params_buyer, tokenURI: params_tokenURI, collectionID: params_collectionID } = params;
+      let {
+        price: current_price,
+        status: current_status,
+        buyer: current_buyer,
+      } = current;
+      let {
+        price: params_price,
+        status: params_status,
+        buyer: params_buyer,
+        tokenURI: params_tokenURI,
+        collectionID: params_collectionID,
+      } = params;
 
       if (parseInt(params_status) === 0) {
-        console.log(params_status)
+        console.log(params_status);
         let order = await prisma.marketorders.update({
           where: { id: params.id },
           data: {
             price: params_price ? params_price : current_price,
             status: params_status,
-            buyerWallet: { connect: { wallet: params_buyer } }
+            buyerWallet: { connect: { wallet: params_buyer } },
           },
         });
-
 
         let token = await tokenServiceInstance.updateTokenByTokenID({
           tokenID: current.tokenID,
           owner: params_buyer,
           tokenURI: params_tokenURI,
-          collectionID: params_collectionID
-        })
+          collectionID: params_collectionID,
+        });
 
         return { order, token: token.token, tokenURI: token.tokenURI };
       } else {
@@ -394,7 +418,8 @@ class MarketOrderService {
           where: { id: params.id },
           data: {
             price: params_price ? params_price : current_price,
-            status: params_status !== undefined ? params_status : current_status,
+            status:
+              params_status !== undefined ? params_status : current_status,
           },
         });
         return order;
@@ -639,6 +664,95 @@ class MarketOrderService {
   //       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
   //     }
   //   }
+
+  async getRevenueByTime(type, from, to) {
+    try {
+      const results = [];
+
+      let currentDate = new Date(from);
+      let end = new Date(to);
+      if (to === "") {
+        end = new Date();
+      }
+
+      while (currentDate <= end) {
+        let periodStart, periodEnd;
+        if (type === "MONTH") {
+          periodStart = new Date(
+            currentDate.getFullYear(),
+            currentDate.getMonth(),
+            1
+          );
+          periodEnd = new Date(
+            currentDate.getFullYear(),
+            currentDate.getMonth() + 1,
+            0,
+            23,
+            59,
+            59,
+            999
+          );
+          currentDate.setMonth(currentDate.getMonth() + 1);
+        } else if (type === "YEAR") {
+          periodStart = new Date(currentDate.getFullYear(), 0, 1);
+          periodEnd = new Date(
+            currentDate.getFullYear(),
+            11,
+            31,
+            23,
+            59,
+            59,
+            999
+          );
+          currentDate.setFullYear(currentDate.getFullYear() + 1);
+        } else if (type === "WEEK") {
+          periodStart = new Date(currentDate);
+          periodStart.setDate(periodStart.getDate() - periodStart.getDay()); // Start of the week (Sunday)
+          periodEnd = new Date(periodStart);
+          periodEnd.setDate(periodEnd.getDate() + 6); // End of the week (Saturday)
+          periodEnd.setHours(23, 59, 59, 999);
+          currentDate.setDate(currentDate.getDate() + 7);
+        } else {
+          throw new Error(
+            "Invalid period type. Use 'month', 'year', or 'week'."
+          );
+        }
+
+        const count = await prisma.marketorders.count({
+          where: {
+            createdAt: {
+              gte: periodStart,
+              lt: periodEnd,
+            },
+          },
+        });
+        const packages = await prisma.marketorders.findMany({
+          where: {
+            createdAt: {
+              gte: periodStart,
+              lt: periodEnd,
+            },
+          },
+        });
+
+        results.push({
+          from: periodStart.toLocaleDateString(),
+          to: periodEnd.toLocaleDateString(),
+          revenue: packages.reduce((acc, curr) => acc + curr.price, 0),
+          count,
+        });
+      }
+
+      return {
+        results,
+        total: results.reduce((acc, curr) => acc + curr.revenue, 0),
+        count: results.reduce((acc, curr) => acc + curr.count, 0),
+      };
+    } catch (err) {
+      console.log(err);
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
 }
 
 module.exports = MarketOrderService;

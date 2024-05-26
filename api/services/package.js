@@ -134,10 +134,16 @@ class PackageService {
     }
   }
 
-  // get all subscribe of a user
-  async getSubscriber({ userWallet, limit, offset, orderBy, id, collectionID }) {
+  async getSubscriber({
+    userWallet,
+    limit,
+    offset,
+    orderBy,
+    id,
+    collectionID,
+  }) {
     try {
-      let where
+      let where;
       if (id) {
         where = {
           subscriber: {
@@ -147,9 +153,7 @@ class PackageService {
             equals: id,
           },
         };
-      }
-      else if (collectionID) 
-      {
+      } else if (collectionID) {
         where = {
           subscriber: {
             equals: userWallet,
@@ -157,10 +161,9 @@ class PackageService {
           collectionID: {
             equals: collectionID,
           },
-          status: 1
+          status: 1,
         };
-      }
-      else {
+      } else {
         where = {
           subscriber: {
             equals: userWallet,
@@ -218,18 +221,18 @@ class PackageService {
             {
               subscriber: {
                 equals: userWallet,
-              }
+              },
             },
             {
               seller: {
                 equals: userWallet,
-              }
-            }
+              },
+            },
           ],
           collectionID: {
             equals: collectionID,
           },
-          status: 1
+          status: 1,
         },
       });
       return marketPackages;
@@ -249,7 +252,7 @@ class PackageService {
           collectionID: {
             equals: collectionID,
           },
-          status: 1
+          status: 1,
         },
         orderBy: {
           createdAt: "desc",
@@ -259,13 +262,178 @@ class PackageService {
 
       if (marketPackages.length > 0) {
         return {
-          "packageType": marketPackages[0].packageType
+          packageType: marketPackages[0].packageType,
         };
-      }
-      else 
-        return "No packages found.";
-      
+      } else return "No packages found.";
     } catch (err) {
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getRevenueByTime(type, from, to) {
+    try {
+      const results = [];
+
+      let currentDate = new Date(from);
+      let end = new Date(to);
+      if (to === "") {
+        end = new Date();
+      }
+
+      while (currentDate <= end) {
+        let periodStart, periodEnd;
+        if (type === "MONTH") {
+          periodStart = new Date(
+            currentDate.getFullYear(),
+            currentDate.getMonth(),
+            1
+          );
+          periodEnd = new Date(
+            currentDate.getFullYear(),
+            currentDate.getMonth() + 1,
+            0,
+            23,
+            59,
+            59,
+            999
+          );
+          currentDate.setMonth(currentDate.getMonth() + 1);
+        } else if (type === "YEAR") {
+          periodStart = new Date(currentDate.getFullYear(), 0, 1);
+          periodEnd = new Date(
+            currentDate.getFullYear(),
+            11,
+            31,
+            23,
+            59,
+            59,
+            999
+          );
+          currentDate.setFullYear(currentDate.getFullYear() + 1);
+        } else if (type === "WEEK") {
+          periodStart = new Date(currentDate);
+          periodStart.setDate(periodStart.getDate() - periodStart.getDay()); // Start of the week (Sunday)
+          periodEnd = new Date(periodStart);
+          periodEnd.setDate(periodEnd.getDate() + 6); // End of the week (Saturday)
+          periodEnd.setHours(23, 59, 59, 999);
+          currentDate.setDate(currentDate.getDate() + 7);
+        } else {
+          throw new Error(
+            "Invalid period type. Use 'month', 'year', or 'week'."
+          );
+        }
+
+        const count = await prisma.marketpackages.count({
+          where: {
+            createdAt: {
+              gte: periodStart,
+              lt: periodEnd,
+            },
+          },
+        });
+        const packages = await prisma.marketpackages.findMany({
+          where: {
+            createdAt: {
+              gte: periodStart,
+              lt: periodEnd,
+            },
+          },
+        });
+
+        results.push({
+          from: periodStart.toLocaleDateString(),
+          to: periodEnd.toLocaleDateString(),
+          revenue: packages.reduce((acc, curr) => acc + curr.price, 0),
+          count
+        });
+      }
+
+      return {
+        results,
+        revenue: results.reduce((acc, curr) => acc + curr.revenue, 0),
+        count: results.reduce((acc, curr) => acc + curr.count, 0),
+      };
+    } catch (err) {
+      console.log(err);
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getSubscribersByTime(type, from, to) {
+    try {
+      const results = [];
+
+      let currentDate = new Date(from);
+      let end = new Date(to);
+      if (to === "") {
+        end = new Date();
+      }
+
+      while (currentDate <= end) {
+        let periodStart, periodEnd;
+        if (type === "MONTH") {
+          periodStart = new Date(
+            currentDate.getFullYear(),
+            currentDate.getMonth(),
+            1
+          );
+          periodEnd = new Date(
+            currentDate.getFullYear(),
+            currentDate.getMonth() + 1,
+            0,
+            23,
+            59,
+            59,
+            999
+          );
+          currentDate.setMonth(currentDate.getMonth() + 1);
+        } else if (type === "YEAR") {
+          periodStart = new Date(currentDate.getFullYear(), 0, 1);
+          periodEnd = new Date(
+            currentDate.getFullYear(),
+            11,
+            31,
+            23,
+            59,
+            59,
+            999
+          );
+          currentDate.setFullYear(currentDate.getFullYear() + 1);
+        } else if (type === "WEEK") {
+          periodStart = new Date(currentDate);
+          periodStart.setDate(periodStart.getDate() - periodStart.getDay()); // Start of the week (Sunday)
+          periodEnd = new Date(periodStart);
+          periodEnd.setDate(periodEnd.getDate() + 6); // End of the week (Saturday)
+          periodEnd.setHours(23, 59, 59, 999);
+          currentDate.setDate(currentDate.getDate() + 7);
+        } else {
+          throw new Error(
+            "Invalid period type. Use 'month', 'year', or 'week'."
+          );
+        }
+
+        const packages = await prisma.marketpackages.count({
+          where: {
+            createdAt: {
+              gte: periodStart,
+              lt: periodEnd,
+            },
+          },
+        });
+
+        results.push({
+          from: periodStart.toLocaleDateString(),
+          to: periodEnd.toLocaleDateString(),
+          count: packages,
+        });
+      }
+
+      return {
+        results,
+        count: results.reduce((acc, curr) => acc + curr.count, 0),
+      };
+    } catch (err) {
+      console.log(err);
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
     }
   }

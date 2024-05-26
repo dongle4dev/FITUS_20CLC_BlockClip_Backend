@@ -10,6 +10,8 @@ const friends = require("./friends");
 const chats = require("./chats");
 const messages = require("./messages");
 const packages = require("./packages");
+const statistics = require("./statistics");
+const reports = require("./reports");
 const path = require("path");
 
 /**
@@ -29,5 +31,7 @@ router.use("/friends", friends);
 router.use("/chats", chats);
 router.use("/messages", messages);
 router.use("/packages", packages);
+router.use("/statistics", statistics);
+router.use("/reports", reports);
 
 module.exports = router;
