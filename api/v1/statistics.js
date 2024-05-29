@@ -27,7 +27,7 @@ router.get("/user", verifyToken, async (req, res) => {
     const from = requestUtil.getKeyword(req.query, "from");
     const to = requestUtil.getKeyword(req.query, "to");
   
-    if (!type || !from) {
+    if (!from) {
       return res
         .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
         .json({ message: constants.MESSAGES.INVALID_REQUEST });
@@ -53,7 +53,7 @@ router.get("/token", verifyToken, async (req, res) => {
     const from = requestUtil.getKeyword(req.query, "from");
     const to = requestUtil.getKeyword(req.query, "to");
   
-    if (!type || !from) {
+    if (!from) {
       return res
         .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
         .json({ message: constants.MESSAGES.INVALID_REQUEST });
@@ -78,7 +78,7 @@ router.get("/revenue", verifyToken, async (req, res) => {
     const from = requestUtil.getKeyword(req.query, "from");
     const to = requestUtil.getKeyword(req.query, "to");
   
-    if (!type || !from) {
+    if (!from) {
       return res
         .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
         .json({ message: constants.MESSAGES.INVALID_REQUEST });
@@ -103,7 +103,7 @@ router.get("/newSubscriber", verifyToken, async (req, res) => {
     const from = requestUtil.getKeyword(req.query, "from");
     const to = requestUtil.getKeyword(req.query, "to");
   
-    if (!type || !from) {
+    if (!from) {
       return res
         .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
         .json({ message: constants.MESSAGES.INVALID_REQUEST });

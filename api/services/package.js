@@ -318,9 +318,34 @@ class PackageService {
           periodEnd.setHours(23, 59, 59, 999);
           currentDate.setDate(currentDate.getDate() + 7);
         } else {
-          throw new Error(
-            "Invalid period type. Use 'month', 'year', or 'week'."
-          );
+          periodStart = new Date(currentDate);
+          periodEnd = new Date(end);
+
+          const count = await prisma.marketpackages.count({
+            where: {
+              createdAt: {
+                gte: periodStart,
+                lt: periodEnd,
+              },
+            },
+          });
+          const packages = await prisma.marketpackages.findMany({
+            where: {
+              createdAt: {
+                gte: periodStart,
+                lt: periodEnd,
+              },
+            },
+          });
+
+          return {
+            results: {
+              from: periodStart.toLocaleDateString(),
+              to: periodEnd.toLocaleDateString(),
+              revenue: packages.reduce((acc, curr) => acc + curr.price, 0),
+              count: count,
+            },
+          };
         }
 
         const count = await prisma.marketpackages.count({
@@ -344,7 +369,7 @@ class PackageService {
           from: periodStart.toLocaleDateString(),
           to: periodEnd.toLocaleDateString(),
           revenue: packages.reduce((acc, curr) => acc + curr.price, 0),
-          count
+          count,
         });
       }
 
@@ -407,12 +432,28 @@ class PackageService {
           periodEnd.setHours(23, 59, 59, 999);
           currentDate.setDate(currentDate.getDate() + 7);
         } else {
-          throw new Error(
-            "Invalid period type. Use 'month', 'year', or 'week'."
-          );
+          periodStart = new Date(currentDate);
+          periodEnd = new Date(end);
+
+          const subscriber = await prisma.marketpackages.count({
+            where: {
+              createdAt: {
+                gte: periodStart,
+                lt: periodEnd,
+              },
+            },
+          });
+
+          return {
+            results: {
+              from: periodStart.toLocaleDateString(),
+              to: periodEnd.toLocaleDateString(),
+              count: subscriber,
+            },
+          };
         }
 
-        const packages = await prisma.marketpackages.count({
+        const subscriber = await prisma.marketpackages.count({
           where: {
             createdAt: {
               gte: periodStart,
@@ -424,7 +465,7 @@ class PackageService {
         results.push({
           from: periodStart.toLocaleDateString(),
           to: periodEnd.toLocaleDateString(),
-          count: packages,
+          count: subscriber,
         });
       }
 

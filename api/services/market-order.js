@@ -713,9 +713,34 @@ class MarketOrderService {
           periodEnd.setHours(23, 59, 59, 999);
           currentDate.setDate(currentDate.getDate() + 7);
         } else {
-          throw new Error(
-            "Invalid period type. Use 'month', 'year', or 'week'."
-          );
+          periodStart = new Date(currentDate);
+          periodEnd = new Date(end);
+
+          const count = await prisma.marketorders.count({
+            where: {
+              createdAt: {
+                gte: periodStart,
+                lt: periodEnd,
+              },
+            },
+          });
+          const orders = await prisma.marketorders.findMany({
+            where: {
+              createdAt: {
+                gte: periodStart,
+                lt: periodEnd,
+              },
+            },
+          });
+
+          return {
+            results: {
+              from: periodStart.toLocaleDateString(),
+              to: periodEnd.toLocaleDateString(),
+              revenue: orders.reduce((acc, curr) => acc + curr.price, 0),
+              count: count,
+            }
+          };
         }
 
         const count = await prisma.marketorders.count({
@@ -726,7 +751,7 @@ class MarketOrderService {
             },
           },
         });
-        const packages = await prisma.marketorders.findMany({
+        const orders = await prisma.marketorders.findMany({
           where: {
             createdAt: {
               gte: periodStart,
@@ -738,7 +763,7 @@ class MarketOrderService {
         results.push({
           from: periodStart.toLocaleDateString(),
           to: periodEnd.toLocaleDateString(),
-          revenue: packages.reduce((acc, curr) => acc + curr.price, 0),
+          revenue: orders.reduce((acc, curr) => acc + curr.price, 0),
           count,
         });
       }

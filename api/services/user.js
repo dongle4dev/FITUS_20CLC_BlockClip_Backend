@@ -85,7 +85,11 @@ class UserService {
       while (currentDate <= end) {
         let periodStart, periodEnd;
         if (type === "MONTH") {
-          periodStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+          periodStart = new Date(
+            currentDate.getFullYear(),
+            currentDate.getMonth(),
+            1
+          );
           periodEnd = new Date(
             currentDate.getFullYear(),
             currentDate.getMonth() + 1,
@@ -116,9 +120,25 @@ class UserService {
           periodEnd.setHours(23, 59, 59, 999);
           currentDate.setDate(currentDate.getDate() + 7);
         } else {
-          throw new Error(
-            "Invalid period type. Use 'month', 'year', or 'week'."
-          );
+          periodStart = new Date(currentDate);
+          periodEnd = new Date(end);
+
+          const user = await prisma.users.count({
+            where: {
+              createdAt: {
+                gte: periodStart,
+                lt: periodEnd,
+              },
+            },
+          });
+
+          return {
+            results: {
+              from: periodStart.toLocaleDateString(),
+              to: periodEnd.toLocaleDateString(),
+              count: user,
+            },
+          };
         }
 
         const user = await prisma.users.count({

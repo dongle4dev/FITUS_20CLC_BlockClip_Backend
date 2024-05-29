@@ -980,9 +980,25 @@ class TokenService {
           periodEnd.setHours(23, 59, 59, 999);
           currentDate.setDate(currentDate.getDate() + 7);
         } else {
-          throw new Error(
-            "Invalid period type. Use 'month', 'year', or 'week'."
-          );
+          periodStart = new Date(currentDate);
+          periodEnd = new Date(end);
+
+          const user = await prisma.tokens.count({
+            where: {
+              createdAt: {
+                gte: periodStart,
+                lt: periodEnd,
+              },
+            },
+          });
+
+          return {
+            results: {
+              from: periodStart.toLocaleDateString(),
+              to: periodEnd.toLocaleDateString(),
+              count: user,
+            },
+          };
         }
 
         const token = await prisma.tokens.count({
