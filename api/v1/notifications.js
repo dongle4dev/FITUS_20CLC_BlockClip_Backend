@@ -19,12 +19,15 @@ const { getReceiverSocketId, io } = require("../../socket/socket.js");
 
 router.post(
   "/",
+  // verifyToken,
   [
-    check("chatID", "A chat ID is required").exists(),
-    check("senderID", "A sender ID is required").exists(),
-    check("content", "A content is required").exists(),
+    check("title", "A title is required").exists(),
+    check("description", "A description is required").exists(),
+    check("link", "A link is required").exists(),
+    check("image", "An image is required").exists(),
+    check("type", "A type is required").exists(),
+    check("receiver", "Receiver is required").exists(),
   ],
-  verifyToken,
   async (req, res) => {
     try {
       const errors = validationResult(req);
@@ -35,18 +38,16 @@ router.post(
           .json({ error: errors.array() });
       }
 
-      let isChatExisted = await chatServiceInstance.getChatByID({ id: req.body.chatID });
-      if (!isChatExisted) {
-        return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
-          notification: "Chat is not existed",
-        });
-      }
-
-      let receiverID = isChatExisted.firstUser === req.body.senderID ? isChatExisted.secondUser : isChatExisted.firstUser;
-
-      let notification = await notificationServiceInstance.sendnotification(req.body);
-
-      if (notification) {
+      let notifications = await notificationServiceInstance.notifyToUsers(req.body);
+      if (notifications.notifications) {
+        notifications.notifications.forEach(notification => {
+          const receiverSocketId = getReceiverSocketId(notification.receiverID);
+        
+          if (receiverSocketId) {
+            // io.to(<socket_id>).emit() used to send events to specific client
+            io.to(receiverSocketId).emit("newNotification", notification);
+          }
+        })
         // helper.notify({
         //   userId: req.userId,
         //   notification:
@@ -58,49 +59,48 @@ router.post(
         //   notification_id: notificationAdd.id,
         // });
         // SOCKET IO FUNCTIONALITY WILL GO HERE
-        const receiverSocketId = getReceiverSocketId(receiverID);
         
-        if (receiverSocketId) {
-          // io.to(<socket_id>).emit() used to send events to specific client
-          io.to(receiverSocketId).emit("newnotification", notification);
-        }
-
         return res
           .status(constants.RESPONSE_STATUS_CODES.OK)
-          .json({ notification: constants.RESPONSE_STATUS.SUCCESS, data: notification });
+          .json({ message: constants.RESPONSE_STATUS.SUCCESS, data: notifications });
       } else {
         return res
           .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
-          .json({ notification: constants.RESPONSE_STATUS.FAILURE });
+          .json({ message: constants.RESPONSE_STATUS.FAILURE });
       }
     } catch (err) {
       console.log(err);
       return res
         .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
-        .json({ notification: constants.notificationS.INTERNAL_SERVER_ERROR });
+        .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
     }
   }
 );
 
 /** get notification of user */
 router.get("/",
+  // "/:wallet", 
+  // [check("wallet", "A valid id is required").exists()],
   verifyToken,
   async (req, res) => {
     try {
+      // const errors = validationResult(req);
+
+      // if (!errors.isEmpty()) {
+      //   return res
+      //     .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+      //     .json({ error: errors.array() });
+      // }
+
+      let userWallet = req.userWallet;
       let limit = requestUtil.getLimit(req.query);
       let offset = requestUtil.getOffset(req.query);
       let orderBy = requestUtil.getSortBy(req.query, "+id");
-      let chatID = requestUtil.getKeyword(req.query, "chatID");
+      let type = requestUtil.getKeyword(req.query, "type");
 
-      let isChatExisted = await chatServiceInstance.getChatByID({ id: chatID });
-      if (!isChatExisted) {
-        return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
-          notification: "Chat is not existed",
-        });
-      }
 
-      let notifications = await notificationServiceInstance.getnotifications({
-        chatID, limit, offset, orderBy
+      let notifications = await notificationServiceInstance.getNotificationsByUser({
+        limit, offset, orderBy, userWallet, type
       });
 
       if (notifications) {

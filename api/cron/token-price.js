@@ -121,3 +121,4 @@ const syncCollection = async () => {
     console.log(error);
   }
 };
+

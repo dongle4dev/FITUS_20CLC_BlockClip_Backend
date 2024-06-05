@@ -10,7 +10,7 @@ let mongodb = require("mongodb");
 // let { BigNumber, providerUtils } = require("@0x/utils");
 // const root_ethers = new ethers(root_provider);
 // const prisma = require("../../prisma");
-// let constants = require("../../config/constants");
+let constants = require("../../config/constants");
 
 // let {
 //   MnemonicWalletSubprovider,
@@ -64,17 +64,17 @@ function removeItemOnce(arr, value) {
 //   }
 // }
 
-// var getRate = async function (symbol) {
-//   try {
-//     let response = await fetch(
-//       `${constants.PRICE_API}${symbol.toLowerCase()}&vs_currencies=usd`
-//     );
-//     let data = await response.json();
-//     return data[symbol.toLowerCase()].usd.toString();
-//   } catch (err) {
-//     console.log(err.message);
-//   }
-// };
+var getRate = async function (symbol) {
+  try {
+    let response = await fetch(
+      `${constants.PRICE_API}${symbol.toLowerCase()}&vs_currencies=usd`
+    );
+    let data = await response.json();
+    return data[symbol.toLowerCase()].usd.toString();
+  } catch (err) {
+    console.log(err.message);
+  }
+};
 
 async function checkOwnerShip(userAddress, tokenId, contractAddress) {
   const childContractInstance = new ethers.Contract(
@@ -265,7 +265,7 @@ async function checkOwnerShip(userAddress, tokenId, contractAddress) {
 module.exports = {
   isValidEthereumAddress,
   // notify,
-  //   getRate,
+    getRate,
   toChecksumAddress,
   toNumber,
   toHex,

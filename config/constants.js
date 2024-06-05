@@ -66,4 +66,15 @@ module.exports = {
     PUBLIC: 1,
     COMMERCIAL: 2,
   },
+  PAYMENT_TYPE: {
+    BTC: '0',
+    ETH: '3'
+  },
+  NOTIFICATION_TYPE: {
+    BUY_TOKEN: '1',
+    SUBSCRIBE_COLLECTION: '2',
+    FRIEND_REQUEST: '3',
+    OTHER: '4', 
+    REPORT: '5'
+  }
 };

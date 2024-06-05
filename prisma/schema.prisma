@@ -13,6 +13,7 @@ model users {
   username      String          @unique 
   avatar        String?
   cover         String?
+  role          String          @default("USER")
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   active        Boolean?        @default(true)
@@ -30,6 +31,7 @@ model users {
   secondUser_chats        chats[]         @relation("secondUser_chats")
   from_reports  reports[]       @relation("from_reports")
   to_reports    reports[]       @relation("to_reports")
+  notifications      notifications[]
 }
 
 model collections {
@@ -154,6 +156,20 @@ model messages {
   updatedAt           DateTime        @updatedAt
   chat                chats           @relation(fields: [chatID], references: [id])
   sender              users           @relation(fields: [senderID], references: [wallet])
+}
+
+model notifications {
+  id                  String          @id @default(auto()) @map("_id") @db.ObjectId
+  title               String   
+  description         String
+  link                String
+  image               String   
+  type                String
+  receiverID          String
+  isRead              Boolean         @default(false)
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  receiver            users           @relation(fields: [receiverID], references: [wallet])
 }
 
 model reports {

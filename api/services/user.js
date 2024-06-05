@@ -494,72 +494,6 @@ class UserService {
     }
   }
 
-  //   async getUserNotification({ userId, limit, offset, orderBy }) {
-  //     try {
-  //       let count = await prisma.notifications.count({
-  //         where: {
-  //           usersId: parseInt(userId),
-  //         },
-  //       });
-
-  //       let unread_count = await prisma.notifications.count({
-  //         where: {
-  //           usersId: parseInt(userId),
-  //           read: false,
-  //         },
-  //       });
-  //       let notifications = await prisma.notifications.findMany({
-  //         where: {
-  //           usersId: parseInt(userId),
-  //         },
-  //         select: {
-  //           read: true,
-  //           id: true,
-  //           active: true,
-  //           created: true,
-  //           message: true,
-  //           updated: true,
-  //           usersId: true,
-  //           order_id: true,
-  //           type: true,
-  //           orders: {
-  //             select: { type: true, txhash: true, categories: { select: { img_url: true } } },
-  //           },
-  //         },
-  //         orderBy: { created: constants.SORT_DIRECTION.DESC },
-  //         take: limit,
-  //         skip: offset,
-  //       });
-
-  //       return {
-  //         notifications,
-  //         limit,
-  //         offset,
-  //         has_next_page: hasNextPage({ limit, offset, count }),
-  //         unread_count,
-  //       };
-  //     } catch (err) {
-  //       console.log(err);
-  //       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
-  //     }
-  //   }
-
-  //   async readUserNotification({ userId }) {
-  //     try {
-  //       let notifications = await prisma.notifications.updateMany({
-  //         where: {
-  //           read: false,
-  //           usersId: parseInt(userId),
-  //         },
-  //         data: { read: true },
-  //       });
-
-  //       return notifications;
-  //     } catch (err) {
-  //       console.log(err);
-  //       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
-  //     }
-  //   }
   async updateUser(params) {
     try {
       let current = await this.getUser(params);
@@ -592,33 +526,6 @@ class UserService {
     }
   }
 
-  // get notifications of a user by type, limit, offset
-  async getNotifications(params) {
-    try {
-      let { userWallet, limit, offset, type } = params;
-
-      console.log(userWallet, limit, offset, type);
-
-      let where = {
-        wallet: {
-          equals: userWallet,
-        },
-        type: {
-          equals: type,
-        },
-      };
-
-      let notification = await prisma.notifications.findMany({
-        where,
-        take: limit,
-        skip: offset,
-      });
-
-      return notification;
-    } catch (err) {
-      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
-    }
-  }
 
   // User subscribe a collection
   async subscribeCollection(params) {

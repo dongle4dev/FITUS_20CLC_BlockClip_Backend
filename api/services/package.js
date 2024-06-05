@@ -1,6 +1,7 @@
 const prisma = require("../../prisma");
 let { hasNextPage } = require("../utils/request-utils");
 let constants = require("../../config/constants");
+let helper = require("../utils/helper");
 
 class PackageService {
   // User subscribe a collection
@@ -270,7 +271,7 @@ class PackageService {
     }
   }
 
-  async getRevenueByTime(type, from, to) {
+  async getRevenueByTime(type, from, to, payment, priceRate) {
     try {
       const results = [];
 
@@ -337,12 +338,12 @@ class PackageService {
               },
             },
           });
-
+          
           return {
             results: {
               from: periodStart.toLocaleDateString(),
               to: periodEnd.toLocaleDateString(),
-              revenue: packages.reduce((acc, curr) => acc + curr.price, 0),
+              revenue: packages.reduce((acc, curr) =>  { return (payment === curr.paymentType) ? acc + curr.price : acc + (curr.price / priceRate)}, 0),
               count: count,
             },
           };
@@ -364,18 +365,19 @@ class PackageService {
             },
           },
         });
-
+        
         results.push({
           from: periodStart.toLocaleDateString(),
           to: periodEnd.toLocaleDateString(),
-          revenue: packages.reduce((acc, curr) => acc + curr.price, 0),
+          revenue: packages.reduce((acc, curr) =>  { return (payment === curr.paymentType) ? acc + curr.price : acc + (curr.price / priceRate)}, 0),
           count,
         });
+
       }
 
       return {
         results,
-        revenue: results.reduce((acc, curr) => acc + curr.revenue, 0),
+        revenue: results.reduce((acc, curr) =>  acc + curr.revenue, 0),
         count: results.reduce((acc, curr) => acc + curr.count, 0),
       };
     } catch (err) {

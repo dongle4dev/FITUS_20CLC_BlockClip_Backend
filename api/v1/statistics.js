@@ -77,15 +77,26 @@ router.get("/revenue", verifyToken, async (req, res) => {
     const type = requestUtil.getKeyword(req.query, "type");
     const from = requestUtil.getKeyword(req.query, "from");
     const to = requestUtil.getKeyword(req.query, "to");
+    const payment = requestUtil.getKeyword(req.query, "payment");
   
     if (!from) {
       return res
         .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
         .json({ message: constants.MESSAGES.INVALID_REQUEST });
     }
-
-    const packageRevenue = await packageServiceInstance.getRevenueByTime(type, from, to);
-    const orderRevenue = await marketOrderServiceInstance.getRevenueByTime(type, from, to);
+    let btc_price = await helper.getRate("Bitcoin");
+    let eth_price = await helper.getRate("Ethereum");
+    
+    let priceRate = 1;
+    
+    if (payment === constants.PAYMENT_TYPE.BTC) {
+      priceRate = await parseFloat(btc_price)/parseFloat(eth_price);
+    } else if (payment === constants.PAYMENT_TYPE.ETH) {
+      priceRate = await parseFloat(eth_price)/parseFloat(btc_price);
+    }
+    
+    const packageRevenue = await packageServiceInstance.getRevenueByTime(type, from, to, payment, priceRate);
+    const orderRevenue = await marketOrderServiceInstance.getRevenueByTime(type, from, to, payment, priceRate);
 
     return res
       .status(constants.RESPONSE_STATUS_CODES.OK)

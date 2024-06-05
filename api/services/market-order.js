@@ -665,7 +665,7 @@ class MarketOrderService {
   //     }
   //   }
 
-  async getRevenueByTime(type, from, to) {
+  async getRevenueByTime(type, from, to, payment, priceRate) {
     try {
       const results = [];
 
@@ -737,7 +737,7 @@ class MarketOrderService {
             results: {
               from: periodStart.toLocaleDateString(),
               to: periodEnd.toLocaleDateString(),
-              revenue: orders.reduce((acc, curr) => acc + curr.price, 0),
+              revenue: orders.reduce((acc, curr) => { return (payment === curr.paymentType) ? acc + curr.price : acc + (curr.price / priceRate)}, 0),
               count: count,
             }
           };
@@ -763,7 +763,7 @@ class MarketOrderService {
         results.push({
           from: periodStart.toLocaleDateString(),
           to: periodEnd.toLocaleDateString(),
-          revenue: orders.reduce((acc, curr) => acc + curr.price, 0),
+          revenue: orders.reduce((acc, curr) => {return (payment === curr.paymentType) ? acc + curr.price : acc + (curr.price / priceRate)}, 0),
           count,
         });
       }
