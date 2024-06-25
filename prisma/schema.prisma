@@ -55,7 +55,7 @@ model collections {
   updatedAt           DateTime        @updatedAt
   creator             users           @relation(fields: [creatorCollection], references: [wallet])
   tokens              tokens[]
-  marketpackages        marketpackages[]
+  marketpackages      marketpackages[]
 }
 
 model tokens {

@@ -335,6 +335,7 @@ router.put(
       let order = await marketOrderServiceInstance.updateOrder(
         params
       );
+      
       if (order) {
         return res
           .status(constants.RESPONSE_STATUS_CODES.OK)

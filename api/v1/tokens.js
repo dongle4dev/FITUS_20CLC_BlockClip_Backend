@@ -5,12 +5,15 @@ const TokenService = require("../services/token");
 const tokenServiceInstance = new TokenService();
 const userService = require("../services/user");
 let userServiceInstance = new userService();
+const collectionService = require("../services/collection");
+let collectionServiceInstance = new collectionService();
 let constants = require("../../config/constants");
 const helper = require("../utils/helper");
 const upload = require("../utils/upload");
 let requestUtil = require("../utils/request-utils");
 const validate = require("../utils/helper");
 const verifyToken = require("../middlewares/verify-token");
+const getUserWallet = require("../middlewares/get-user-wallet");
 const { watermarkVideo, deleteTempVideo } = require("../utils/watermark");
 const { encodeLSB } = require("../utils/embedData");
 const fs = require("fs");
@@ -33,6 +36,8 @@ const { title } = require("process");
 const packageService = require("../services/package");
 const packageServiceInstance = new packageService();
 const axios = require("axios");
+const jwt = require("jsonwebtoken");
+let config = require("../../config/config");
 
 /**
  * Token routes
@@ -89,14 +94,73 @@ router.get("/", async (req, res) => {
       status,
       active,
     });
+    
 
-    return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
-      message: constants.RESPONSE_STATUS.SUCCESS,
-      data: {
-        tokens: tokens.tokens,
-        count: tokens.count,
-      },
-    });
+    let user;
+    let userWallet;
+    var accessToken = req.headers["x-access-token"] || req.headers.authorization && req.headers.authorization.split(' ')[1];
+    if (accessToken) {
+      jwt.verify(accessToken, config.secret, async (err, decoded) => {
+        if (err) {
+          return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: "This NFT is not available." });
+        }
+        if (!decoded.username) {
+          user = await userServiceInstance.getUser(decoded);
+          if (!user) {
+            return res
+            .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+            .json({ message: "This NFT is not available." });
+          }
+          userWallet = decoded.userWallet;
+        }
+      })
+
+      if (user.role === "ADMIN") {
+        return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
+          message: constants.RESPONSE_STATUS.SUCCESS,
+          data: {
+            tokens: tokens.tokens,
+            count: tokens.count,
+          },
+        });
+      }
+    }
+    
+    if (collectionID && accessToken) {
+      let foundCollection = await collectionServiceInstance.getCollectionByCollectionID(collectionID);
+      if (userWallet === foundCollection.creatorCollection) {
+        return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
+          message: constants.RESPONSE_STATUS.SUCCESS,
+          data: {
+            tokens: tokens.tokens,
+            count: tokens.count,
+          },
+        });
+      }
+    } else {
+      let newTokens = [];
+      for (let i = 0; i < tokens.tokens.length; i++) {
+        if (tokens.tokens[i].active === false || tokens.tokens[i].disabled) {
+          if (tokens.tokens[i].owner === userWallet) {
+            newTokens.push(tokens.tokens[i]);
+          }
+        } else {
+          newTokens.push(tokens.tokens[i]);
+        } 
+       
+      }
+
+      return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
+        message: constants.RESPONSE_STATUS.SUCCESS,
+        data: {
+          tokens: newTokens,
+          count: newTokens? newTokens.length : 0,
+        },
+      });
+    }
+  
   } catch (err) {
     console.log(err);
     return res
@@ -156,13 +220,35 @@ router.get(
         active,
       });
 
-      return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
-        message: constants.RESPONSE_STATUS.SUCCESS,
-        data: {
-          tokens: tokens.tokens,
-          count: tokens.count,
-        },
-      });
+      userWallet = await userServiceInstance.getUser(req.userWallet);
+      if (userWallet.role === "ADMIN") {
+        return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
+          message: constants.RESPONSE_STATUS.SUCCESS,
+          data: {
+            tokens: tokens.tokens,
+            count: tokens.count,
+          },
+        });
+      } else {
+        let newTokens = [];
+        for (let i = 0; i < tokens.tokens.length; i++) {
+          if (tokens.tokens[i].active === false || tokens.tokens[i].disabled) {
+            if (tokens.tokens[i].owner === req.userWallet) {
+              newTokens.push(tokens.tokens[i]);
+            }
+          } else {
+            newTokens.push(tokens.tokens[i]);
+          } 
+        }
+
+        return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
+          message: constants.RESPONSE_STATUS.SUCCESS,
+          data: {
+            tokens: newTokens,
+            count: newTokens? newTokens.length : 0,
+          },
+        });
+      }
     } catch (err) {
       console.log(err);
       return res
@@ -918,9 +1004,25 @@ router.get(
 
       let token = await tokenServiceInstance.getTokenByTokenID(req.params);
       if (token) {
-        return res
+        if (token.disabled || token.active === false) {
+          let userWallet = await getUserWallet(req, res);
+
+          let foundUser = await userServiceInstance.getUser({userWallet: userWallet});
+          if (userWallet === token.owner || foundUser.role === "ADMIN") {
+            return res
+            .status(constants.RESPONSE_STATUS_CODES.OK)
+            .json({ message: constants.RESPONSE_STATUS.SUCCESS, data: token });
+          }  else {
+            return res
+            .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+            .json({ message: "This NFT is not available." });
+          }
+        }
+        else {
+          return res
           .status(constants.RESPONSE_STATUS_CODES.OK)
           .json({ message: constants.RESPONSE_STATUS.SUCCESS, data: token });
+        }
       } else {
         return res
           .status(constants.RESPONSE_STATUS_CODES.NOT_FOUND)

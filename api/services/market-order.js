@@ -17,6 +17,7 @@ class MarketOrderService {
       let {
         tokenID,
         chainID,
+        collectionID,
         tokenAddress,
         paymentType,
         seller,
@@ -28,6 +29,7 @@ class MarketOrderService {
         data: {
           sellerWallet: { connect: { wallet: seller } },
           tokens: { connect: { tokenID: tokenID } },
+          // collections: { connect: {collectionID: collectionID}},
           chainID: chainID,
           tokenAddress: tokenAddress,
           paymentType: paymentType,
@@ -385,6 +387,7 @@ class MarketOrderService {
         price: current_price,
         status: current_status,
         buyer: current_buyer,
+        event: current_event
       } = current;
       let {
         price: params_price,
@@ -392,27 +395,43 @@ class MarketOrderService {
         buyer: params_buyer,
         tokenURI: params_tokenURI,
         collectionID: params_collectionID,
+        event: params_event
       } = params;
 
       if (parseInt(params_status) === 0) {
-        console.log(params_status);
         let order = await prisma.marketorders.update({
           where: { id: params.id },
           data: {
             price: params_price ? params_price : current_price,
             status: params_status,
+            event: params_event,
             buyerWallet: { connect: { wallet: params_buyer } },
           },
         });
 
-        let token = await tokenServiceInstance.updateTokenByTokenID({
-          tokenID: current.tokenID,
-          owner: params_buyer,
-          tokenURI: params_tokenURI,
-          collectionID: params_collectionID,
-        });
-
-        return { order, token: token.token, tokenURI: token.tokenURI };
+        if (params_event === 1) {
+          let token = await tokenServiceInstance.updateTokenByTokenID({
+            tokenID: current.tokenID,
+            owner: params_buyer,
+            tokenURI: params_tokenURI,
+            collectionID: params_collectionID,
+            totalViews: 0,
+            totalShares: 0,
+            listOfLikedUsers: [],
+            listOfFavoriteUsers: []
+          });
+          
+          return { order, token: token.token, tokenURI: token.tokenURI };
+        } else {
+          let token = await tokenServiceInstance.updateTokenByTokenID({
+            tokenID: current.tokenID,
+            owner: params_buyer,
+            tokenURI: params_tokenURI,
+            collectionID: params_collectionID,
+          });
+          
+          return { order, token: token.token, tokenURI: token.tokenURI };
+        }
       } else {
         let order = await prisma.marketorders.update({
           where: { id: params.id },

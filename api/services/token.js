@@ -28,7 +28,6 @@ class TokenService {
 
       if (status !== "" && active !== "") {
         where = {
-          disabled: false,
           collectionID: {
             contains: collectionID,
           },
@@ -59,7 +58,6 @@ class TokenService {
         };
       } else if (status !== "") {
         where = {
-          disabled: false,
           collectionID: {
             contains: collectionID,
           },
@@ -89,7 +87,6 @@ class TokenService {
         };
       } else if (active !== "") {
         where = {
-          disabled: false,
           collectionID: {
             contains: collectionID,
           },
@@ -115,7 +112,6 @@ class TokenService {
         };
       } else {
         where = {
-          disabled: false,
           collectionID: {
             contains: collectionID,
           },
@@ -428,7 +424,6 @@ class TokenService {
       let where;
       if (active !== "") {
         where = {
-          disabled: false,
           tokenID: {
             contains: tokenID,
           },
@@ -454,7 +449,6 @@ class TokenService {
         };
       } else {
         where = {
-          disabled: false,
           tokenID: {
             contains: tokenID,
           },
@@ -669,7 +663,13 @@ class TokenService {
         owner: params_owner,
         collectionID: params_collectionID,
         avatar: params_avatar,
+        totalViews: params_totalViews,
+        totalShares: params_totalShares,
+        listOfLikedUsers: params_listOfLikedUsers,
+        listOfFavoriteUsers: params_listOfFavoriteUsers
       } = params;
+
+      console.log(params_totalViews)
       let {
         description: current_description,
         source: current_source,
@@ -681,7 +681,13 @@ class TokenService {
         owner: current_owner,
         collectionID: current_collectionID,
         avatar: current_avatar,
+        totalViews: current_totalViews,
+        totalShares: current_totalShares,
+        listOfLikedUsers: current_listOfLikedUsers,
+        listOfFavoriteUsers: current_listOfFavoriteUsers
       } = current;
+
+
       let token = await prisma.tokens.update({
         where: {
           id: current.id,
@@ -694,6 +700,10 @@ class TokenService {
           avatar: params_avatar ? params_avatar : current_avatar,
           title: params_title ? params_title : current_title,
           active: params_active !== undefined ? params_active : current_active,
+          totalViews: params_totalViews !== undefined ? params_totalViews : current_totalViews,
+          totalShares: params_totalShares !== undefined ? params_totalShares : current_totalShares,
+          listOfLikedUsers: params_listOfLikedUsers !== undefined? params_listOfLikedUsers : current_listOfLikedUsers,
+          listOfFavoriteUsers: params_listOfFavoriteUsers !== undefined? params_listOfFavoriteUsers : current_listOfFavoriteUsers,
           disabled:
             params_disabled !== undefined ? params_disabled : current_disabled,
           title_lowercase: params_title
