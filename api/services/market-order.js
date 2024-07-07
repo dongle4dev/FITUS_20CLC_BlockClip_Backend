@@ -136,6 +136,43 @@ class MarketOrderService {
     }
   }
 
+  async getOrdersByUser({ userWallet, limit, offset, orderBy }) {
+    try {
+      orderBy = { createdAt: "desc" };
+
+      let where = {
+        OR: [ 
+          {
+            seller: {
+              contains: userWallet
+            },
+          },
+          {
+            buyer: {
+              contains: userWallet
+            }
+          }
+        ],
+        status: 0
+      };
+
+      let count = await prisma.marketorders.count({ where });
+      let order = await prisma.marketorders.findMany({
+        where,
+        orderBy,
+        take: limit,
+        skip: offset,
+      });
+      return {
+        order,
+        count,
+      };
+    } catch (err) {
+      console.log(err);
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   async getTokensByOrder({ status, active, limit, offset, orderBy }) {
     try {
       let where;

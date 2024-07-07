@@ -171,6 +171,7 @@ class PackageService {
           },
         };
       }
+      let count = await prisma.marketpackages.count({ where });
 
       let marketPackages = await prisma.marketpackages.findMany({
         where,
@@ -180,7 +181,12 @@ class PackageService {
       });
 
       if (marketPackages) {
-        return marketPackages;
+        return {
+          marketPackages,
+          count,
+          limit,
+          offset
+        };
       } else {
         throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
       }
@@ -206,6 +212,54 @@ class PackageService {
       });
 
       return marketPackages;
+    } catch (err) {
+      console.log(err);
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getSubscriberByUser(params) {
+    try {
+      let { userWallet, 
+            limit,
+            offset,
+            orderBy
+      } = params;
+    
+      let where = {
+        OR: [
+          {
+            subscriber: {
+              contains: userWallet,
+            },
+          },
+          {
+            seller: {
+              contains: userWallet,
+            },
+          },
+        ]
+      }
+
+      orderBy = { createdAt: 'desc'};
+
+      let marketPackages = await prisma.marketpackages.findMany({
+        where,
+        orderBy
+      });
+
+      let count = await prisma.marketpackages.count({ where });
+
+      if (marketPackages) {
+        return {
+          marketPackages,
+          count,
+          limit,
+          offset
+        };
+      } else {
+        throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+      }
     } catch (err) {
       console.log(err);
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);

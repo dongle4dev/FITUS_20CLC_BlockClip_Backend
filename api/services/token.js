@@ -1036,6 +1036,16 @@ class TokenService {
       throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
     }
   }
+
+  async isDisabledToken(params) {
+    let { tokenID } = params;
+    let tokens = await prisma.tokens.findMany({
+      where: { tokenID: tokenID },
+    });
+    return {
+      isDisabled: tokens.at(0).disabled
+    };
+  }
 }
 
 module.exports = TokenService;

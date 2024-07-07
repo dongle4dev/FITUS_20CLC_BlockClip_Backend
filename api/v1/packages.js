@@ -83,6 +83,42 @@ router.post("/", verifyToken, async (req, res) => {
 //   }
 // });
 
+
+// get package by user
+
+
+router.get("/:userWallet", async (req, res) => {
+  try {
+    let limit = requestUtil.getLimit(req.query);
+    let offset = requestUtil.getOffset(req.query);
+    let orderBy = requestUtil.getSortBy(req.query, "+id");
+    let userWallet = req.params.userWallet;
+
+    await packageServiceInstance.checkExpire({ userWallet });
+
+    let subscribers = await packageServiceInstance.getSubscriberByUser({
+      userWallet,
+      limit,
+      offset,
+      orderBy
+    });
+
+    if (subscribers) {
+      return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
+        message: constants.RESPONSE_STATUS.SUCCESS,
+        data: {
+          packages: subscribers.marketPackages,
+          count: subscribers.count
+        },
+      });
+    }
+  } catch (err) {
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+  }
+});
+
 // // lấy danh sách giao dịch đki của user by ID
 // // done
 
@@ -119,7 +155,10 @@ router.get("/", verifyToken, async (req, res) => {
     if (subscribers) {
       return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
         message: constants.RESPONSE_STATUS.SUCCESS,
-        data: subscribers,
+        data: {
+          packages: subscribers.marketPackages,
+          count: subscribers.count
+        },
       });
     }
   } catch (err) {

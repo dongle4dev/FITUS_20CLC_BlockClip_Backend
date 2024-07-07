@@ -172,6 +172,8 @@ router.get(
   }
 );
 
+
+
 // router.post("/executeMetaTx", async (req, res) => {
 //   const { intent, fnSig, from, contractAddress } = req.body;
 //   const txDetails = { intent, fnSig, from, contractAddress };
@@ -188,6 +190,49 @@ router.get(
 //     .status(constants.RESPONSE_STATUS_CODES.OK)
 //     .json({ message: constants.RESPONSE_STATUS.SUCCESS, data: txResult });
 // });
+
+/**
+ *  Gets all the order details by user
+ */
+
+router.get(
+  "/:userWallet",
+  async (req, res) => {
+    try {
+      let limit = requestUtil.getLimit(req.query);
+      let offset = requestUtil.getOffset(req.query);
+      let orderBy = requestUtil.getSortBy(req.query, "+id");
+      let userWallet = req.params.userWallet;
+
+      let orders = await marketOrderServiceInstance.getOrdersByUser({
+        userWallet,
+        limit,
+        offset,
+        orderBy,
+      });
+
+      if (orders) {
+        return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
+          message: constants.RESPONSE_STATUS.SUCCESS,
+          data: {
+            order: orders.order,
+            count: orders.count
+          },
+        });
+      } else {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.NOT_FOUND)
+          .json({ message: constants.RESPONSE_STATUS.NOT_FOUND });
+      }
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+    }
+  }
+);
+
 
 /**
  *  Gets all the order details
