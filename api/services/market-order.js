@@ -207,11 +207,13 @@ class MarketOrderService {
         skip: offset,
         select: {
           tokens: true,
+          price: true
         },
         distinct: ["tokenID"],
       });
       let tokens = orders.map((order) => {
-        return order.tokens;
+        let newToken = { ...order.tokens, price: order.price }
+        return newToken;
       });
       return {
         tokens,

@@ -464,9 +464,6 @@ class TokenService {
               },
             },
           ],
-          creator: {
-            contains: wallet,
-          },
           owner: {
             contains: wallet,
           },

@@ -85,6 +85,51 @@ router.post(
 );
 
 /**
+ *  Gets all the tokens details by status, price
+ */
+
+router.get(
+  "/tokens",
+  async (req, res) => {
+    try {
+      let limit = requestUtil.getLimit(req.query);
+      let offset = requestUtil.getOffset(req.query);
+      let orderBy = requestUtil.getSortBy(req.query, "+id");
+      let status = requestUtil.getKeyword(req.query, "status");
+      let active = requestUtil.getKeyword(req.query, "active");
+
+      let orders = await marketOrderServiceInstance.getTokensByOrder({
+        status,
+        active,
+        limit,
+        offset,
+        orderBy,
+      });
+
+      if (orders) {
+        return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
+          message: constants.RESPONSE_STATUS.SUCCESS,
+          data: {
+            tokens: orders.tokens,
+            count: orders.count
+          },
+        });
+      } else {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.NOT_FOUND)
+          .json({ message: constants.RESPONSE_STATUS.NOT_FOUND });
+      }
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+    }
+  }
+);
+
+
+/**
  *  Check a order is listed
  */
 
@@ -278,49 +323,7 @@ router.get(
   }
 );
 
-/**
- *  Gets all the tokens details by status, price
- */
 
-router.get(
-  "/tokens",
-  async (req, res) => {
-    try {
-      let limit = requestUtil.getLimit(req.query);
-      let offset = requestUtil.getOffset(req.query);
-      let orderBy = requestUtil.getSortBy(req.query, "+id");
-      let status = requestUtil.getKeyword(req.query, "status");
-      let active = requestUtil.getKeyword(req.query, "active");
-
-      let orders = await marketOrderServiceInstance.getTokensByOrder({
-        status,
-        active,
-        limit,
-        offset,
-        orderBy,
-      });
-
-      if (orders) {
-        return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
-          message: constants.RESPONSE_STATUS.SUCCESS,
-          data: {
-            tokens: orders.tokens,
-            count: orders.count
-          },
-        });
-      } else {
-        return res
-          .status(constants.RESPONSE_STATUS_CODES.NOT_FOUND)
-          .json({ message: constants.RESPONSE_STATUS.NOT_FOUND });
-      }
-    } catch (err) {
-      console.log(err);
-      return res
-        .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
-        .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
-    }
-  }
-);
 
 /**
  *  Gets single order details
