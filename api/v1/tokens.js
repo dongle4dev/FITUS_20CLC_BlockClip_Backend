@@ -94,41 +94,40 @@ router.get("/", async (req, res) => {
       status,
       active,
     });
-    
 
-    let user;
-    let userWallet;
     var accessToken = req.headers["x-access-token"] || req.headers.authorization && req.headers.authorization.split(' ')[1];
+    var user;
+    var userWallet;
     if (accessToken) {
       jwt.verify(accessToken, config.secret, async (err, decoded) => {
         if (err) {
           return res
-          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
-          .json({ message: "This NFT is not available." });
+            .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+            .json({ message: "This NFT is not available." });
         }
         if (!decoded.username) {
           user = await userServiceInstance.getUser(decoded);
-          if (!user) {
-            return res
-            .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
-            .json({ message: "This NFT is not available." });
-          }
           userWallet = decoded.userWallet;
+          // user = await { ...user};
+          await new Promise(resolve => setTimeout(resolve, 5000));
         }
+       
       })
+    }
 
-      if (user.role === "ADMIN") {
-        return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
-          message: constants.RESPONSE_STATUS.SUCCESS,
-          data: {
-            tokens: tokens.tokens,
-            count: tokens.count,
-          },
-        });
-      }
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    if (user && user.role === "ADMIN") {
+      return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
+        message: constants.RESPONSE_STATUS.SUCCESS,
+        data: {
+          tokens: tokens.tokens,
+          count: tokens.count,
+        },
+      });
     }
     
-    if (collectionID && accessToken) {
+    if (collectionID && userWallet) {
       let foundCollection = await collectionServiceInstance.getCollectionByCollectionID(collectionID);
       if (userWallet === foundCollection.creatorCollection) {
         return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
@@ -139,28 +138,30 @@ router.get("/", async (req, res) => {
           },
         });
       }
-    } else {
-      let newTokens = [];
-      for (let i = 0; i < tokens.tokens.length; i++) {
-        if (tokens.tokens[i].active === false || tokens.tokens[i].disabled) {
-          if (tokens.tokens[i].owner === userWallet) {
-            newTokens.push(tokens.tokens[i]);
-          }
-        } else {
+    } 
+      
+    let newTokens = [];
+    for (let i = 0; i < tokens.tokens.length; i++) {
+      if (tokens.tokens[i].active === false || tokens.tokens[i].disabled) {
+        if (tokens.tokens[i].owner === userWallet) {
           newTokens.push(tokens.tokens[i]);
-        } 
-       
+        }
+      } else {
+        newTokens.push(tokens.tokens[i]);
       }
 
-      return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
-        message: constants.RESPONSE_STATUS.SUCCESS,
-        data: {
-          tokens: newTokens,
-          count: newTokens? newTokens.length : 0,
-        },
-      });
     }
-  
+    
+    return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
+      message: constants.RESPONSE_STATUS.SUCCESS,
+      data: {
+        tokens: newTokens,
+        count: newTokens ? newTokens.length : 0,
+      },
+    });
+    
+
+
   } catch (err) {
     console.log(err);
     return res
@@ -238,14 +239,14 @@ router.get(
             }
           } else {
             newTokens.push(tokens.tokens[i]);
-          } 
+          }
         }
 
         return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
           message: constants.RESPONSE_STATUS.SUCCESS,
           data: {
             tokens: newTokens,
-            count: newTokens? newTokens.length : 0,
+            count: newTokens ? newTokens.length : 0,
           },
         });
       }
@@ -358,7 +359,7 @@ router.post(
           if (token) {
             await updateFileAlias(`${token.token.creator}.png`, `${token.token.id}.png`);
             await updateKeyName(token.token.creator, token.token.id, key);
-            await tokenServiceInstance.updateToken({id: token.token.id, avatar: `https://block-clip.s3.ap-southeast-2.amazonaws.com/${token.token.id}.png`});
+            await tokenServiceInstance.updateToken({ id: token.token.id, avatar: `https://block-clip.s3.ap-southeast-2.amazonaws.com/${token.token.id}.png` });
             token.token.avatar = `https://block-clip.s3.ap-southeast-2.amazonaws.com/${token.token.id}.png`;
             return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
               message: constants.RESPONSE_STATUS.SUCCESS,
@@ -384,7 +385,7 @@ router.post(
 
         let token = await tokenServiceInstance.createToken(req.body);
         await updateFileAlias(`${token.token.creator}.png`, `${token.token.id}.png`);
-        await tokenServiceInstance.updateToken({id: token.token.id, avatar: `https://block-clip.s3.ap-southeast-2.amazonaws.com/${token.token.id}.png`});
+        await tokenServiceInstance.updateToken({ id: token.token.id, avatar: `https://block-clip.s3.ap-southeast-2.amazonaws.com/${token.token.id}.png` });
         token.token.avatar = `https://block-clip.s3.ap-southeast-2.amazonaws.com/${token.token.id}.png`;
         if (token) {
           return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
@@ -1007,21 +1008,21 @@ router.get(
         if (token.disabled || token.active === false) {
           let userWallet = await getUserWallet(req, res);
 
-          let foundUser = await userServiceInstance.getUser({userWallet: userWallet});
+          let foundUser = await userServiceInstance.getUser({ userWallet: userWallet });
           if (userWallet === token.owner || foundUser.role === "ADMIN") {
             return res
-            .status(constants.RESPONSE_STATUS_CODES.OK)
-            .json({ message: constants.RESPONSE_STATUS.SUCCESS, data: token });
-          }  else {
+              .status(constants.RESPONSE_STATUS_CODES.OK)
+              .json({ message: constants.RESPONSE_STATUS.SUCCESS, data: token });
+          } else {
             return res
-            .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
-            .json({ message: "This NFT is not available." });
+              .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+              .json({ message: "This NFT is not available." });
           }
         }
         else {
           return res
-          .status(constants.RESPONSE_STATUS_CODES.OK)
-          .json({ message: constants.RESPONSE_STATUS.SUCCESS, data: token });
+            .status(constants.RESPONSE_STATUS_CODES.OK)
+            .json({ message: constants.RESPONSE_STATUS.SUCCESS, data: token });
         }
       } else {
         return res

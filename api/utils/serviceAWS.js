@@ -155,7 +155,7 @@ const generatePresignedUrl = async (aliasName) => {
   try {
     const command = new GetObjectCommand(params);
     const url = await getSignedUrl(s3, command, { expiresIn: 600 });
-    return url;
+    return url;     
   } catch (err) {
     console.error("Error generating pre-signed URL:", err);
   }
