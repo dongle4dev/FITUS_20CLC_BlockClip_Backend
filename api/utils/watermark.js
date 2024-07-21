@@ -80,7 +80,7 @@ const watermarkPosition2 = async (
           options: {
             x: "main_w-overlay_w-40",
             y: "main_h-overlay_h-30",
-            enable: `between(t,0,${duration * 0.1})`,
+            enable: `between(t,0,${duration * 0.05})`,
           },
           inputs: ["0:v", "v1"],
           outputs: "v2",
@@ -99,7 +99,7 @@ const watermarkPosition2 = async (
           options: {
             x: "20",
             y: "main_w-overlay_w/2",
-            enable: `between(t,${duration * 0.4},${duration * 0.6})`,
+            enable: `between(t,${duration * 0.48},${duration * 0.52})`,
           },
           inputs: ["v2", "v3"],
           outputs: "v4",
@@ -118,7 +118,7 @@ const watermarkPosition2 = async (
           options: {
             x: "main_w-overlay_w-40",
             y: "main_h-overlay_h-30",
-            enable: `between(t,${duration * 0.9},${duration})`,
+            enable: `between(t,${duration * 0.95},${duration})`,
           },
           inputs: ["v4", "v5"],
         }

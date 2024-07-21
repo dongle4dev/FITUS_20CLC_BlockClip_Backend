@@ -362,6 +362,21 @@ class CollectionService {
     }
   }
 
+  async deleteCollectionByID(params) {
+    try {
+      let { id } = params;
+      let collections = await prisma.collections.delete({
+        where: { id: id }
+      });
+
+      return collections;
+    } catch (err) {
+      console.log(err);
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+
   async viewCollection(params) {
     try {
       let { collectionID } = params;

@@ -391,6 +391,51 @@ router.patch(
 );
 
 /**
+ *  View collection by collection ID
+ */
+
+router.delete(
+  "/:id",
+  async (req, res) => {
+    try {
+      let params = { ...req.params };
+
+      if (!params.id) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: constants.MESSAGES.INPUT_VALIDATION_ERROR });
+      }
+
+      let collectionExists = await collectionServiceInstance.getCollectionByID(params);
+
+      if (collectionExists.length === 0) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: "collection does not exists" });
+      }
+
+      let collection = await collectionServiceInstance.deleteCollectionByID(
+        params
+      );
+      if (collection) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.OK)
+          .json({ message: constants.RESPONSE_STATUS.SUCCESS, data: collection });
+      } else {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: constants.RESPONSE_STATUS.FAILURE });
+      }
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+    }
+  }
+);
+
+/**
  *  Updates an existing collection of NFT token by collection id
  */
 

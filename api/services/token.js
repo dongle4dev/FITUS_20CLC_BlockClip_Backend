@@ -559,6 +559,21 @@ class TokenService {
     }
   }
 
+  async deleteTokenByID(params) {
+    try {
+      let token = await prisma.tokens.delete({
+        where: {
+          id: params.id,
+        }
+      });
+
+     return token;
+    } catch (err) {
+      console.log(err);
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   async updateToken(params) {
     try {
       let current = await this.getTokenByID(params);

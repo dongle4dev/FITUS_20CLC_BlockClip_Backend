@@ -428,6 +428,7 @@ router.post(
       const videoEncryptor = new VideoEncryptor();
       let source;
 
+      console.time('Total');
       // ?mode=public || ?mode=commercial
       if (
         parseInt(mode) === constants.MODE.PUBLIC ||
@@ -435,19 +436,25 @@ router.post(
       ) {
         // Flow: Upload original video
         await uploadVideo(inputVideo, inputVideo);
-
+        
+        console.time('Watermark');
         await watermarkVideo(inputVideo, outputVideo);
-        await encodeLSB(outputVideo, outputEncode, wallet);
+        console.timeEnd('Watermark');
 
+        console.time('LSB');
+        await encodeLSB(outputVideo, outputEncode, wallet);
+        console.timeEnd('LSB');
         if (parseInt(mode) === constants.MODE.PUBLIC) {
           // Flow: Watermark -> Embed wallet address -> upload
           source = await tokenServiceInstance.uploadVideoToIPFS(outputEncode);
           await deleteTempVideo(outputEncode);
         } else if (parseInt(mode) === constants.MODE.COMMERCIAL) {
           // Create symmetric key
+          console.time('AES');
           const keyId = await createSymmetricKey(wallet);
           // Flow: Watermark -> Embed wallet address -> upload
           await videoEncryptor.encryptVideo(outputEncode, keyId, outputEncrypt);
+          console.timeEnd('AES');
           source = await tokenServiceInstance.uploadVideoToIPFS(outputEncrypt);
           await deleteTempVideo(outputEncrypt);
         }
@@ -459,7 +466,7 @@ router.post(
       await deleteTempVideo(outputVideo);
       await deleteTempVideo(outputEncode);
       await deleteTempVideo(inputVideo);
-
+      console.timeEnd('Total');
       if (source) {
         return res
           .status(constants.RESPONSE_STATUS_CODES.OK)
@@ -1130,6 +1137,7 @@ router.put(
   }
 );
 
+
 /**
  *  Updates an existing NFT token by id
  */
@@ -1172,6 +1180,55 @@ router.put(
         return res
           .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
           .json({ message: "token update failed" });
+      }
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+    }
+  }
+);
+
+
+router.delete(
+  "/:id",
+  [check("id", "A valid id is required").exists()],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+
+      if (!errors.isEmpty()) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ error: errors.array() });
+      }
+
+      let params = { ...req.params, ...req.body };
+
+      if (!params.id) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: constants.MESSAGES.INPUT_VALIDATION_ERROR });
+      }
+
+      let tokenExists = await tokenServiceInstance.getTokenByID(params);
+
+      if (!tokenExists) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: "token doesnt exist" });
+      }
+
+      let token = await tokenServiceInstance.deleteTokenByID(params);
+      if (token) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.OK)
+          .json({ message: "token deleted successfully", data: token });
+      } else {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: "token delete failed" });
       }
     } catch (err) {
       console.log(err);
