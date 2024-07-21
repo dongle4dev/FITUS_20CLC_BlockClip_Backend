@@ -233,6 +233,46 @@ router.get("/", async (req, res) => {
 });
 
 /**
+ *  Updates an existing user by wallet for admin
+ */
+
+router.put("/:wallet",
+  verifyToken,
+  async (req, res) => {
+    try {
+      let params = { userWallet: req.params.wallet, ...req.body };
+
+      let userExists = await userServiceInstance.userExists(params);
+
+      if (userExists.length === 0) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: "user doesnt exists" });
+      }
+
+      let user = await userServiceInstance.updateUser(
+        params
+      );
+      if (user) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.OK)
+          .json({ message: "user updated successfully", data: user });
+      } else {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: "user update failed" });
+      }
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+    }
+  }
+);
+
+
+/**
  *  Updates an existing user by wallet
  */
 
@@ -270,6 +310,8 @@ router.put("/",
     }
   }
 );
+
+
 
 /**
  *  Post avatar of user
