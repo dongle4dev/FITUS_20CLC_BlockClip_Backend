@@ -574,6 +574,96 @@ class TokenService {
     }
   }
 
+  async createComment(params) {
+    try {
+      let {
+        content,
+        ownerWallet,
+        tokenID
+      } = params;
+      let comment = await prisma.comments.create({
+        data: {
+          token: { connect: { tokenID: tokenID } },
+          owner: { connect: { wallet: ownerWallet } },
+          content: content,
+        },
+      });
+
+      return {
+        comment
+      };
+    } catch (err) {
+      console.log(err);
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getCommentsByTokenID({ 
+    limit,
+    offset,
+    orderBy,
+    tokenID 
+  }) {
+    try {
+      let count = await prisma.tokens.count({  where: {
+        tokenID: tokenID,
+      } });
+      let comments = await prisma.comments.findMany({
+        where: {
+          tokenID: tokenID,
+        },
+        orderBy,
+        take: limit,
+        skip: offset,
+        include: {
+          owner: {
+            select: {
+              username: true,
+              avatar: true,
+            }
+          }
+        }
+      });
+      return {
+        comments,
+        count,
+        limit,
+        offset
+      };;
+    } catch (err) {
+      console.log(err);
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async deleteCommentByID(params) {
+    try {
+      let comment = await prisma.comments.delete({
+        where: {
+          id: params.id,
+        }
+      });
+
+     return comment;
+    } catch (err) {
+      console.log(err);
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  async getCommentByID(params) {
+    try {
+      let { id } = params;
+      let comments = await prisma.comments.findMany({
+        where: { id: id },
+      });
+      return comments.at(0);
+    } catch (err) {
+      console.log(err);
+      throw new Error(constants.MESSAGES.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   async updateToken(params) {
     try {
       let current = await this.getTokenByID(params);

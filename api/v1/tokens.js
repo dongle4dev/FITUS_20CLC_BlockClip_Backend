@@ -309,6 +309,55 @@ router.get("/favorite", verifyToken, async (req, res) => {
 });
 
 /**
+ *  Adds a new comment
+ */
+
+router.post(
+  "/comments",
+  check("tokenID", "A valid tokenID is required").exists(),
+  check("ownerWallet", "A valid owner wallet is required").exists().isEthereumAddress(),
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+
+      if (!errors.isEmpty()) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ error: errors.array() });
+      }
+
+      let owner = await userServiceInstance.getUser({
+        wallet: req.body.ownerWallet,
+      });
+
+      if (!owner) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: constants.MESSAGES.INPUT_VALIDATION_ERROR });
+      }
+
+      let comment = await tokenServiceInstance.createComment(req.body);
+      if (comment) {
+        return res.status(constants.RESPONSE_STATUS_CODES.OK).json({
+          message: constants.RESPONSE_STATUS.SUCCESS,
+          data: comment,
+        });
+      } else {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: constants.RESPONSE_STATUS.FAILURE });
+      }
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+    }
+  }
+);
+
+
+/**
  *  Adds a new token
  */
 
@@ -407,6 +456,8 @@ router.post(
     }
   }
 );
+
+
 
 /**
  *  Post video of NFT Token
@@ -1190,6 +1241,55 @@ router.put(
   }
 );
 
+router.delete(
+  "/comments/:id",
+  [check("id", "A valid id is required").exists()],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+
+      if (!errors.isEmpty()) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ error: errors.array() });
+      }
+
+      let params = { ...req.params, ...req.body };
+
+      if (!params.id) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: constants.MESSAGES.INPUT_VALIDATION_ERROR });
+      }
+
+      let commentExists = await tokenServiceInstance.getCommentByID(params);
+
+      if (!commentExists) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: "comment doesnt exist" });
+      }
+
+      let comment = await tokenServiceInstance.deleteCommentByID(params);
+      if (comment) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.OK)
+          .json({ message: "comment deleted successfully", data: comment });
+      } else {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: "comment delete failed" });
+      }
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+    }
+  }
+);
+
+// Delete comment by ID
 
 router.delete(
   "/:id",
@@ -1238,5 +1338,48 @@ router.delete(
     }
   }
 );
+
+
+/**
+ *  Gets single collection detail by tokenID
+ */
+
+router.get(
+  "/comments/:tokenID",
+  [check("tokenID", "A valid tokenID is required").exists()],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+
+      if (!errors.isEmpty()) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ error: errors.array() });
+      }
+
+      let comment = await tokenServiceInstance.getCommentsByTokenID(req.params);
+      if (comment) {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.OK)
+          .json({ 
+            message: constants.RESPONSE_STATUS.SUCCESS, 
+            data: {
+              comments: comment.comments,
+              count: comment.count
+            } });
+      } else {
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.NOT_FOUND)
+          .json({ message: constants.RESPONSE_STATUS.NOT_FOUND });
+      }
+    } catch (err) {
+      console.log(err);
+      return res
+        .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
+        .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });
+    }
+  }
+);
+
 
 module.exports = router;

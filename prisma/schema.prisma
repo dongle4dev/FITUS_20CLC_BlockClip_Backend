@@ -32,6 +32,7 @@ model users {
   from_reports  reports[]       @relation("from_reports")
   to_reports    reports[]       @relation("to_reports")
   notifications      notifications[]
+  comments      comments[]
 }
 
 model collections {
@@ -85,6 +86,7 @@ model tokens {
   ownerWallet         users         @relation("owner_tokens", fields: [owner], references: [wallet])
   collection          collections   @relation(fields: [collectionID], references: [collectionID])
   reports             reports[]
+  comments            comments[]
 }
 
 model marketorders {
@@ -184,5 +186,16 @@ model reports {
   token              tokens          @relation(fields: [tokenID], references: [tokenID])
   sender              users           @relation("from_reports", fields: [from], references: [wallet])
   owner               users           @relation("to_reports", fields: [to], references: [wallet])
+}
+
+model comments {
+  id                  String          @id @default(auto()) @map("_id") @db.ObjectId
+  content             String
+  tokenID             String
+  ownerWallet         String
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  token               tokens          @relation(fields: [tokenID], references: [tokenID])
+  owner         users           @relation(fields: [ownerWallet], references: [wallet])
 }
 
