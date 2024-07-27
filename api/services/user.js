@@ -514,7 +514,7 @@ class UserService {
         where: { wallet: params.userWallet },
         data: {
           cover: params_cover ? params_cover : current_cover,
-          active: params_active ? params_active : current_active,
+          active: params_active !== undefined ? params_active : current_active,
           avatar: params_avatar ? params_avatar : current_avatar,
           username: params_username ? params_username : current_username,
         },

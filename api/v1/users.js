@@ -236,11 +236,11 @@ router.get("/", async (req, res) => {
  *  Updates an existing user by wallet for admin
  */
 
-router.put("/:wallet",
+router.put("/:userWallet",
   verifyToken,
   async (req, res) => {
     try {
-      let params = { userWallet: req.params.wallet, ...req.body };
+      let params = { userWallet: req.params.userWallet, ...req.body };
 
       let userExists = await userServiceInstance.userExists(params);
 
@@ -248,7 +248,7 @@ router.put("/:wallet",
         return res
           .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
           .json({ message: "user doesnt exists" });
-      }
+      } 
 
       let user = await userServiceInstance.updateUser(
         params
