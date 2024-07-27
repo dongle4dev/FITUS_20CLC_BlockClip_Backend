@@ -1349,6 +1349,10 @@ router.get(
   [check("tokenID", "A valid tokenID is required").exists()],
   async (req, res) => {
     try {
+      let limit = requestUtil.getLimit(req.query);
+      let offset = requestUtil.getOffset(req.query);
+      let orderBy = requestUtil.getSortBy(req.query, "-createdAt");
+
       const errors = validationResult(req);
 
       if (!errors.isEmpty()) {
@@ -1357,7 +1361,9 @@ router.get(
           .json({ error: errors.array() });
       }
 
-      let comment = await tokenServiceInstance.getCommentsByTokenID(req.params);
+      let comment = await tokenServiceInstance.getCommentsByTokenID({
+        ...req.params,
+        limit, offset, orderBy});
       if (comment) {
         return res
           .status(constants.RESPONSE_STATUS_CODES.OK)

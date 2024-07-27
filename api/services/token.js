@@ -605,9 +605,10 @@ class TokenService {
     tokenID 
   }) {
     try {
-      let count = await prisma.tokens.count({  where: {
+      let count = await prisma.comments.count({ where: {
         tokenID: tokenID,
-      } });
+      }});
+      console.log(count)
       let comments = await prisma.comments.findMany({
         where: {
           tokenID: tokenID,
