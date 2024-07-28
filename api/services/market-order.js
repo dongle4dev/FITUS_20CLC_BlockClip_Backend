@@ -115,8 +115,8 @@ class MarketOrderService {
         status: status
           ? parseInt(status)
           : {
-              not: 5,
-            },
+            not: 5,
+          },
       };
 
       let count = await prisma.marketorders.count({ where });
@@ -141,7 +141,7 @@ class MarketOrderService {
       orderBy = { createdAt: "desc" };
 
       let where = {
-        OR: [ 
+        OR: [
           {
             seller: {
               contains: userWallet
@@ -181,8 +181,8 @@ class MarketOrderService {
           status: status
             ? parseInt(status)
             : {
-                not: 5,
-              },
+              not: 5,
+            },
           tokens: {
             is: {
               active: active == "true",
@@ -194,8 +194,8 @@ class MarketOrderService {
           status: status
             ? parseInt(status)
             : {
-                not: 5,
-              },
+              not: 5,
+            },
         };
       }
 
@@ -356,8 +356,8 @@ class MarketOrderService {
           seller: seller
             ? seller
             : {
-                contains: "",
-              },
+              contains: "",
+            },
         },
       });
 
@@ -448,6 +448,27 @@ class MarketOrderService {
           },
         });
 
+        if (parseInt(curToken.mode) === constants.MODE.COMMERCIAL) {
+          const key = await getKeyKMS(curToken.id);
+          await videoEncryptor.decryptVideo(filePath, key, filePath + ".mp4");
+
+          await encodeLSB(filePath + ".mp4", filePath + ".mp4", current_buyer);
+          await decodeLSB(filePath + ".mp4", filePath + ".txt");
+          await videoEncryptor.encryptVideo(filePath + ".mp4", key, filePath);
+
+          new_source = await tokenServiceInstance.uploadVideoToIPFS(
+            filePath + ".encrypted"
+          );
+        } else {
+          await encodeLSB(filePath, filePath, current_buyer);
+          await decodeLSB(filePath, filePath.replace(".mp4", ".txt")); // Make sure the file is embedded with the correct data (Delete it if it's not needed)
+          new_source = await tokenServiceInstance.uploadVideoToIPFS(filePath);
+        }
+        await deleteTempVideo(filePath);
+        await deleteTempVideo(filePath + ".mp4");
+        await deleteTempVideo(filePath + ".encrypted");
+
+
         if (params_event === 1) {
           let token = await tokenServiceInstance.updateTokenByTokenID({
             tokenID: current.tokenID,
@@ -459,7 +480,7 @@ class MarketOrderService {
             listOfLikedUsers: [],
             listOfFavoriteUsers: []
           });
-          
+
           return { order, token: token.token, tokenURI: token.tokenURI };
         } else {
           let token = await tokenServiceInstance.updateTokenByTokenID({
@@ -468,7 +489,7 @@ class MarketOrderService {
             tokenURI: params_tokenURI,
             collectionID: params_collectionID,
           });
-          
+
           return { order, token: token.token, tokenURI: token.tokenURI };
         }
       } else {
@@ -795,7 +816,7 @@ class MarketOrderService {
             results: {
               from: periodStart.toLocaleDateString(),
               to: periodEnd.toLocaleDateString(),
-              revenue: orders.reduce((acc, curr) => { return (payment === curr.paymentType) ? acc + curr.price : acc + (curr.price / priceRate)}, 0),
+              revenue: orders.reduce((acc, curr) => { return (payment === curr.paymentType) ? acc + curr.price : acc + (curr.price / priceRate) }, 0),
               count: count,
             }
           };
@@ -821,7 +842,7 @@ class MarketOrderService {
         results.push({
           from: periodStart.toLocaleDateString(),
           to: periodEnd.toLocaleDateString(),
-          revenue: orders.reduce((acc, curr) => {return (payment === curr.paymentType) ? acc + curr.price : acc + (curr.price / priceRate)}, 0),
+          revenue: orders.reduce((acc, curr) => { return (payment === curr.paymentType) ? acc + curr.price : acc + (curr.price / priceRate) }, 0),
           count,
         });
       }
