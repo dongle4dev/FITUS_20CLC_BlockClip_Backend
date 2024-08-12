@@ -15,7 +15,7 @@ const validate = require("../utils/helper");
 const verifyToken = require("../middlewares/verify-token");
 const getUserWallet = require("../middlewares/get-user-wallet");
 const { watermarkVideo, deleteTempVideo } = require("../utils/watermark");
-const { encodeLSB } = require("../utils/embedData");
+const { encodeLSB, decodeLSB } = require("../utils/embedData");
 const fs = require("fs");
 var crypto = require("crypto");
 const {
@@ -475,9 +475,23 @@ router.post(
       let inputVideo = `public/${req.file.filename}`;
       let outputVideo = inputVideo.replace(".mp4", "_output.mp4");
       let outputEncode = inputVideo.replace(".mp4", "_encoded.mp4");
+      let outputDecode = inputVideo.replace(".mp4", "_decoded.mp4");
       let outputEncrypt = inputVideo.replace(".mp4", ".encrypted");
       const videoEncryptor = new VideoEncryptor();
       let source;
+
+
+      let checkData = await decodeLSB(inputVideo, outputDecode);
+      let foundOwner = await userServiceInstance.getUser({userWallet: checkData});
+      
+      if (foundOwner) {
+        await deleteTempVideo(inputVideo);
+        await deleteTempVideo(outputDecode);
+
+        return res
+          .status(constants.RESPONSE_STATUS_CODES.BAD_REQUEST)
+          .json({ message: 'This is duplicated video!' });
+      }
 
       console.time('Total');
       // ?mode=public || ?mode=commercial
@@ -517,6 +531,7 @@ router.post(
       await deleteTempVideo(outputVideo);
       await deleteTempVideo(outputEncode);
       await deleteTempVideo(inputVideo);
+      await deleteTempVideo(outputDecode);
       console.timeEnd('Total');
       if (source) {
         return res

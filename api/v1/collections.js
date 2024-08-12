@@ -26,6 +26,7 @@ let packageServiceInstance = new packageService();
 
 router.post(
   "/",
+  verifyToken,
   async (req, res) => {
     /* 	#swagger.tags = ['Collection']
         #swagger.description = 'Endpoint to create a collection' */
@@ -92,7 +93,6 @@ router.post(
   async (req, res) => {
     try {
       let bannerURL = requestUtil.getFileURL(req.file);
-
 
       if (bannerURL) {
         return res
@@ -184,14 +184,17 @@ router.get("/subscribed", verifyToken, async (req, res) => {
         .json({ message: constants.MESSAGES.INPUT_VALIDATION_ERROR });
     }
 
-    const subscribed = await packageServiceInstance.getSubscriber({
+    let subscribed = await packageServiceInstance.getSubscriber({
       userWallet,
     });
+    console.log(subscribed);
 
     let count = subscribed.length;
-    await Promise.all(subscribed.map(async (sub) => {
+    await Promise.all(subscribed.marketPackages.map(async (sub) => {
       let temp = await collectionServiceInstance.getCollectionByCollectionID({collectionID: sub.collectionID})
       collection.push(temp);
+
+      return temp;
     }));
 
     if (collection) {
@@ -205,6 +208,7 @@ router.get("/subscribed", verifyToken, async (req, res) => {
         .json({ message: constants.RESPONSE_STATUS.FAILURE });
     }
   } catch (err) {
+    console.log(err)
     return res
         .status(constants.RESPONSE_STATUS_CODES.INTERNAL_SERVER_ERROR)
         .json({ message: constants.MESSAGES.INTERNAL_SERVER_ERROR });

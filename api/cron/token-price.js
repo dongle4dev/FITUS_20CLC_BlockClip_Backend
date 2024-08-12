@@ -39,7 +39,7 @@ cron.schedule("0 */2 * * *", async function () {
   await syncToken();
 });
 
-const tokenContractAddress = "0xC94D4239B037B842f1Ed92dAC48884eA2Ed06563";
+const tokenContractAddress = "0xc7094bE2C8Fa42f032ae21e8d9bBDc55A29440D0";
 const contractABI = artifacts;
 
 const syncToken = async () => {
