@@ -27,7 +27,6 @@ class UserService {
   async getUsers({ limit, offset, orderBy, username, wallet }) {
     try {
       let where = {
-        active: true,
         username: {
           contains: username,
         },
