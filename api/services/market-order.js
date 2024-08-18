@@ -4,7 +4,14 @@ let constants = require("../../config/constants");
 let zeroxUtil = require("../utils/zerox-util");
 const helper = require("../utils/helper");
 const tokenService = require("./token");
+const { watermarkVideo, deleteTempVideo } = require("../utils/watermark");
 let tokenServiceInstance = new tokenService();
+const { getKeyKMS } = require("../utils/serviceAWS");
+const VideoEncryptor = require("video-encryptor");
+let path = require("path");
+let fs = require("fs");
+let axios = require("axios");
+const { encodeLSB, decodeLSB } = require("../utils/embedData");
 
 /**
  * Includes all the Order services that controls
@@ -446,6 +453,29 @@ class MarketOrderService {
             event: params_event,
             buyerWallet: { connect: { wallet: params_buyer } },
           },
+        });
+
+        // Download video -> decrypt -> embed new data -> encrypt -> upload
+        const curToken = await tokenServiceInstance.getTokenByTokenID({
+          tokenID: current.tokenID,
+        });
+
+        const videoEncryptor = new VideoEncryptor();
+        const source = curToken.source;
+        let filePath = `public/${order.id}`; // Replace with the desired file path and name
+        let new_source;
+
+        const response = await axios.get(source, {
+          method: "GET",
+          responseType: "stream",
+        });
+        const writer = fs.createWriteStream(filePath);
+
+        response.data.pipe(writer);
+
+        await new Promise((resolve, reject) => {
+          writer.on("finish", resolve);
+          writer.on("error", reject);
         });
 
         if (parseInt(curToken.mode) === constants.MODE.COMMERCIAL) {
