@@ -614,8 +614,8 @@ router.post("/license", verifyToken, async (req, res) => {
           userWallet,
           collectionID: token.collectionID,
         });
-      console.log(marketPackage);
-      if (marketPackage[0] || token.owner === userWallet) {
+      const user = await userServiceInstance.getUser({userWallet: req.userWallet});
+      if (marketPackage[0] || token.owner === userWallet || user.role === "ADMIN") {
         // Get JWT from header
         let jwt = req.headers.authorization.split(" ")[1];
         console.log(jwt);
